@@ -16,69 +16,117 @@ extern void remove_intr(void);
 
 extern volatile uint32_t XFrameCount;
 
-#define WIDTH   40
-#define HEIGHT  30
+#define WIDTH  40
+#define HEIGHT 30
 
 uint16_t tile_mem[] = {
     // 0
-    0x8888, 0x8888,
-    0x8000, 0x0008,
-    0x8000, 0x0008,
-    0x8000, 0x0008,
-    0x8000, 0x0008,
-    0x8000, 0x0008,
-    0x8000, 0x0008,
-    0x8888, 0x8888,
+    0x8888,
+    0x8888,
+    0x8000,
+    0x0008,
+    0x8000,
+    0x0008,
+    0x8000,
+    0x0008,
+    0x8000,
+    0x0008,
+    0x8000,
+    0x0008,
+    0x8000,
+    0x0008,
+    0x8888,
+    0x8888,
 
     // 1
-    0x000f, 0xffff,
-    0x0ff1, 0x1111,
-    0xf111, 0xf111,
-    0xf11f, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
+    0x000f,
+    0xffff,
+    0x0ff1,
+    0x1111,
+    0xf111,
+    0xf111,
+    0xf11f,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
 
     // 2
-    0xffff, 0xf000,
-    0x1111, 0x1ff0,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
+    0xffff,
+    0xf000,
+    0x1111,
+    0x1ff0,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
 
     // 3
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0xf111, 0x1111,
-    0x0ff1, 0x1111,
-    0x000f, 0xffff,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0xf111,
+    0x1111,
+    0x0ff1,
+    0x1111,
+    0x000f,
+    0xffff,
 
     // 4
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x111f,
-    0x1111, 0x1ff0,
-    0xffff, 0xf000,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x111f,
+    0x1111,
+    0x1ff0,
+    0xffff,
+    0xf000,
 
     // 5
-    0x0001, 0x4000,
-    0x0011, 0x4400,
-    0x0111, 0x4440,
-    0x1111, 0x4444,
-    0x0001, 0x4000,
-    0x0001, 0x4000,
-    0x0001, 0x4000,
-    0x0001, 0x4000,
+    0x0001,
+    0x4000,
+    0x0011,
+    0x4400,
+    0x0111,
+    0x4440,
+    0x1111,
+    0x4444,
+    0x0001,
+    0x4000,
+    0x0001,
+    0x4000,
+    0x0001,
+    0x4000,
+    0x0001,
+    0x4000,
 };
 
 void draw_background()
@@ -94,34 +142,33 @@ void draw_background()
 void draw_ball(int x, int y, bool is_visible)
 {
     // Ball is tiles are #1-4
-    // Attributes: XXXXHVII (X=color extend depending on BPP, H V flip, and extra index bits II)
+    // Attributes: XXXXHVII (X=color extend depending on BPP, H V flip, and extra
+    // index bits II)
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, y * WIDTH + x);
-    if (is_visible) {
-        xm_setw(DATA, 0x0001);
-        xm_setw(DATA, 0x0002);
+    if (is_visible)
+    {
+        xm_setl(DATA, 0x00010002);
         xm_setw(WR_ADDR, (y + 1) * WIDTH + x);
-        xm_setw(DATA, 0x0003);
-        xm_setw(DATA, 0x0004);
-    } else {
-        xm_setw(DATA, 0x0000);
-        xm_setw(DATA, 0x0000);
+        xm_setl(DATA, 0x00030004);
+    }
+    else
+    {
+        xm_setl(DATA, 0x00000000);
         xm_setw(WR_ADDR, (y + 1) * WIDTH + x);
-        xm_setw(DATA, 0x0000);
-        xm_setw(DATA, 0x0000);
+        xm_setl(DATA, 0x00000000);
     }
 }
 
 void draw_four_flipped_arrows(int x, int y)
 {
     // Arrow is tile #5 (upward arrow, blue left, red right)
-    // Attributes: XXXXHVII (X=color extend depending on BPP, H V flip, and extra index bits II)
+    // Attributes: XXXXHVII (X=color extend depending on BPP, H V flip, and extra
+    // index bits II)
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, y * WIDTH + x);
-    xm_setw(DATA, 0x0005);
-    xm_setw(DATA, 0x0805);  // flip H
-    xm_setw(DATA, 0x0405);  // flip V
-    xm_setw(DATA, 0x0C05);  // flip HV
+    xm_setl(DATA, 0x00050805);
+    xm_setl(DATA, 0x04050C05);
 }
 
 void wait_frame()
@@ -136,10 +183,6 @@ void xosera_demo()
 
     xosera_init(0);
 
-    // Set the Xosera interrupt mask
-    uint16_t sc = xm_getw(SYS_CTRL);
-    xm_setw(SYS_CTRL, sc | 0x8);
-
     install_intr();
 
     xreg_setw(PA_DISP_ADDR, 0x0000);
@@ -147,7 +190,7 @@ void xosera_demo()
     xreg_setw(PA_LINE_LEN, WIDTH);
 
     // Set to tiled 4-bpp + Hx2 + Vx2
-    xreg_setw(PA_GFX_CTRL, 0x0025);
+    xreg_setw(PA_GFX_CTRL, 0x0015);
 
     // tile height to 8
     xreg_setw(PA_TILE_CTRL, 0x0007);
@@ -167,12 +210,13 @@ void xosera_demo()
 
     draw_background();
 
-    int x = 0;
-    int y = 0;
+    int x  = 0;
+    int y  = 0;
     int sx = 1;
     int sy = 1;
 
-    while (1) {
+    while (1)
+    {
         wait_frame();
 
         // Debug
@@ -181,20 +225,24 @@ void xosera_demo()
         draw_ball(x, y, false);
         x += sx;
         y += sy;
-        if (x < 0) {
-            x = 0;
+        if (x < 0)
+        {
+            x  = 0;
             sx = -sx;
         }
-        if (y < 0) {
-            y = 0;
+        if (y < 0)
+        {
+            y  = 0;
             sy = -sy;
         }
-        if (x >= WIDTH - 1) {
-            x = WIDTH - 1 - 1;
+        if (x >= WIDTH - 1)
+        {
+            x  = WIDTH - 1 - 1;
             sx = -sx;
         }
-        if (y >= HEIGHT - 1) {
-            y = HEIGHT - 1 - 1;
+        if (y >= HEIGHT - 1)
+        {
+            y  = HEIGHT - 1 - 1;
             sy = -sy;
         }
         draw_ball(x, y, true);
