@@ -4,20 +4,20 @@
 
 #include <math.h>
 
-#define BLACK       0x0
-#define RED         0x9
-#define GREEN       0xA
-#define BLUE        0xC
-#define GRAY        0x7
-#define DARK_GREEN  0x2
-#define DARK_BLUE   0x4
-#define DARK_YELLOW 0x3
-#define WHITE       0xF
+#define BLACK       0
+#define RED         12
+#define GREEN       10
+#define BLUE        9
+#define GRAY        7
+#define DARK_GREEN  2
+#define DARK_BLUE   1
+#define DARK_YELLOW 14
+#define WHITE       15
 
-#define KEY_UP          0x1
-#define KEY_DOWN        0x2
-#define KEY_LEFT        0x4
-#define KEY_RIGHT       0x8
+#define KEY_UP    0x1
+#define KEY_DOWN  0x2
+#define KEY_LEFT  0x4
+#define KEY_RIGHT 0x8
 
 extern int screen_width;
 extern int screen_height;
@@ -26,55 +26,62 @@ extern int key_pressed;
 extern void draw_pixel(int x, int y, int color);
 
 
-static fx32 car_pos = FX(0.0f);
+static fx32 car_pos  = FX(0.0f);
 static fx32 distance = FX(0.0f);
-static fx32 speed = FX(0.0f);
+static fx32 speed    = FX(0.0f);
 
-static fx32 curvature = FX(0.0f);
-static fx32 track_curvature = FX(0.0f);
+static fx32 curvature        = FX(0.0f);
+static fx32 track_curvature  = FX(0.0f);
 static fx32 player_curvature = FX(0.0f);
-static fx32 track_distance = FX(0.0f);
+static fx32 track_distance   = FX(0.0f);
 
-typedef struct {
+typedef struct
+{
     fx32 curvature;
     fx32 distance;
 } track_section_t;
 
-static track_section_t track_sections[] = {
-    {FX(0.0f), FX(10.0f)},
-    {FX(0.0f), FX(200.0f)},
-    {FX(1.0f), FX(200.0f)},
-    {FX(0.0f), FX(400.0f)},
-    {FX(-1.0f), FX(100.0f)},
-    {FX(0.0f), FX(200.0f)},
-    {FX(-1.0f), FX(200.0f)},
-    {FX(1.0f), FX(200.0f)},
-    {FX(0.0f), FX(200.0f)},
-    {FX(0.2f), FX(500.0f)},
-    {FX(0.0f), FX(200.0f)}
-};
+static track_section_t track_sections[] = {{FX(1.0f), FX(200.0f)},
+                                           {FX(0.0f), FX(200.0f)},
+                                           {FX(1.0f), FX(200.0f)},
+                                           {FX(0.0f), FX(400.0f)},
+                                           {FX(-1.0f), FX(100.0f)},
+                                           {FX(0.0f), FX(200.0f)},
+                                           {FX(-1.0f), FX(200.0f)},
+                                           {FX(1.0f), FX(200.0f)},
+                                           {FX(0.0f), FX(200.0f)},
+                                           {FX(0.2f), FX(500.0f)},
+                                           {FX(0.0f), FX(200.0f)}};
 
 
-void draw_sprite_line(int x, int y, char *c, int color) {
-    for (int i = 0; *c != '\0'; ++i) {
+void draw_sprite_line(int x, int y, char * c, int color)
+{
+    for (int i = 0; *c != '\0'; ++i)
+    {
         if (*c != ' ')
             draw_pixel(x, y, color);
         c++;
         x++;
     }
-};
+}
 
-void init() {
+void init()
+{
     // find position on track
-    for (int i = 0; i < sizeof(track_sections) / sizeof(track_section_t); ++i) {
+    for (unsigned int i = 0; i < sizeof(track_sections) / sizeof(track_section_t); ++i)
+    {
         track_distance += track_sections[i].distance;
     }
 }
 
-void update(fx32 elapsed_time) {
-    if (key_pressed & KEY_UP) {
+void update(fx32 elapsed_time)
+{
+    if (key_pressed & KEY_UP)
+    {
         speed += MUL(FX(2.0f), elapsed_time);
-    } else {
+    }
+    else
+    {
         speed -= MUL(FX(1.0f), elapsed_time);
     }
 
@@ -98,19 +105,20 @@ void update(fx32 elapsed_time) {
     distance += MUL(MUL(FX(70.0f), speed), elapsed_time);
 
     // get point on track
-    fx32 offset = 0;
-    int track_section = 0;
+    fx32         offset        = 0;
+    unsigned int track_section = 0;
 
     if (distance >= track_distance)
         distance -= track_distance;
 
     // find position on track
-    while (track_section < sizeof(track_sections) / sizeof(track_section_t) && offset < distance) {
+    while (track_section < sizeof(track_sections) / sizeof(track_section_t) && offset < distance)
+    {
         offset += track_sections[track_section].distance;
         track_section++;
     }
 
-    fx32 target_curvature = track_sections[track_section - 1].curvature;
+    fx32 target_curvature = track_section > 0 ? track_sections[track_section - 1].curvature : FX(0.0f);
     fx32 track_curve_diff = MUL(MUL(target_curvature - curvature, elapsed_time), speed);
     curvature += track_curve_diff;
 
@@ -124,7 +132,8 @@ void update(fx32 elapsed_time) {
         for (int x = 0; x < screen_width; x++)
             draw_pixel(x, y, y < screen_height / 4 ? DARK_BLUE : BLUE);
 
-    for (int x = 0; x < screen_width; x++) {
+    for (int x = 0; x < screen_width; x++)
+    {
         int hill_height = (int)(fabs(sinf(x * 0.01f + FLT(track_curvature)) * 16.0f));
         for (int y = screen_height / 2 - hill_height; y < screen_height / 2; y++)
             draw_pixel(x, y, DARK_YELLOW);
@@ -136,27 +145,29 @@ void update(fx32 elapsed_time) {
 
     for (int y = 0; y < screen_height / 2; y++)
     {
-        fx32 yy = FXI(y);
-        fx32 perspective = DIV(yy, FXI(screen_height / 2));
+        fx32 yy           = FXI(y);
+        fx32 perspective  = DIV(yy, FXI(screen_height / 2));
         fx32 middle_point = FX(0.5f) + FX(FLT(curvature) * powf((1.0f - FLT(perspective)), 3.0f));
-        int grass_color = sinf(20.0f * powf(1.0f - FLT(perspective), 3.0f) + FLT(distance) * 0.1f) > 0.0f ? GREEN : DARK_GREEN;
-        int clip_color = sinf(80.0f * powf(1.0f - FLT(perspective), 2.0f) + FLT(distance)) > 0.0f ? RED : WHITE;
+        int  grass_color =
+            sinf(20.0f * powf(1.0f - FLT(perspective), 3.0f) + FLT(distance) * 0.1f) > 0.0f ? GREEN : DARK_GREEN;
+        int  clip_color = sinf(80.0f * powf(1.0f - FLT(perspective), 2.0f) + FLT(distance)) > 0.0f ? RED : WHITE;
         fx32 road_width = FX(0.1f) + MUL(perspective, FX(0.8f));
 
         fx32 clip_width = MUL(road_width, FX(0.15f));
 
         road_width = MUL(road_width, FX(0.5f));
 
-        int left_grass = MUL(middle_point - road_width - clip_width, FXI(screen_width));
-        int left_clip = MUL(middle_point - road_width, FXI(screen_width));
-        int right_clip = MUL(middle_point + road_width, FXI(screen_width));
+        int left_grass  = MUL(middle_point - road_width - clip_width, FXI(screen_width));
+        int left_clip   = MUL(middle_point - road_width, FXI(screen_width));
+        int right_clip  = MUL(middle_point + road_width, FXI(screen_width));
         int right_grass = MUL(middle_point + road_width + clip_width, FXI(screen_width));
 
-        for (int x = 0; x < screen_width; x++) {
+        for (int x = 0; x < screen_width; x++)
+        {
 
-            fx32 xx = FXI(x);
-            int row = screen_height / 2 + y;
-            
+            fx32 xx  = FXI(x);
+            int  row = screen_height / 2 + y;
+
             if (xx >= 0 && x < left_grass)
                 draw_pixel(x, row, grass_color);
             if (xx >= left_grass && x < left_clip)
@@ -172,8 +183,8 @@ void update(fx32 elapsed_time) {
 
     // draw car
     car_pos = player_curvature - track_curvature;
-    int x = screen_width / 2 + INT(DIV2(MUL(FXI(screen_width), car_pos), FX(2.0f)) - FXI(7));
-    int y = screen_height - 20;
+    int x   = screen_width / 2 + INT(DIV2(MUL(FXI(screen_width), car_pos), FX(2.0f)) - FXI(7));
+    int y   = screen_height - 20;
 
     draw_sprite_line(x, y++, "     x     ", BLACK);
     draw_sprite_line(x, y++, " xx xxx xx ", BLACK);

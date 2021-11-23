@@ -34,16 +34,36 @@ int key_pressed = 0;
 
 static SDL_Renderer * renderer;
 
+const uint16_t defpal[16] = {
+    0x0000,        // black
+    0x000A,        // blue
+    0x00A0,        // green
+    0x00AA,        // cyan
+    0x0A00,        // red
+    0x0A0A,        // magenta
+    0x0AA0,        // brown
+    0x0AAA,        // light gray
+    0x0555,        // dark gray
+    0x055F,        // light blue
+    0x05F5,        // light green
+    0x05FF,        // light cyan
+    0x0F55,        // light red
+    0x0F5F,        // light magenta
+    0x0FF5,        // yellow
+    0x0FFF         // white
+};
+
+
 void init();
 void update(fx32 elapsed_time);
 
 void draw_pixel(int x, int y, int color)
 {
-    int intensity = (color & 8) ? 255 : 128;
-    int red = (color & 1) ? 1 : 0;
-    int green = (color & 2) ? 1 : 0;
-    int blue = (color & 4) ? 1 : 0;
-    SDL_SetRenderDrawColor(renderer, intensity * red, intensity * green, intensity * blue, SDL_ALPHA_OPAQUE);
+    uint16_t e     = defpal[color];
+    int      red   = e >> 8;
+    int      green = (e >> 4) & 0xF;
+    int      blue  = e & 0xF;
+    SDL_SetRenderDrawColor(renderer, red << 4, green << 4, blue << 4, SDL_ALPHA_OPAQUE);
     SDL_RenderDrawPoint(renderer, x, y);
 }
 
@@ -76,9 +96,14 @@ int main(int argc, char * argv[])
 
         Uint32 ticks = SDL_GetTicks();
 
-        fx32 elapsed_time = FX(((float)ticks - (float)last_ticks) / 1000.0f);
+        float delta_ticks = ((float)ticks - (float)last_ticks);
 
-        //printf("%g\n", FLT(elapsed_time));
+        fx32 elapsed_time = FX(delta_ticks / 1000.0f);
+
+        if (delta_ticks < 16)
+            SDL_Delay(16 - delta_ticks);
+
+        // printf("%g\n", FLT(elapsed_time));
 
         last_ticks = ticks;
 
