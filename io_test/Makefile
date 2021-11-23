@@ -16,7 +16,7 @@ SYSLIBDIR?=$(ROSCO_M68K_DIR)/code/software/libs/build/lib
 DEFINES=-DROSCO_M68K
 CFLAGS=-std=c11 -ffreestanding -ffunction-sections -fdata-sections \
     -Wall -Wextra -Werror -Wno-unused-function -pedantic -I$(SYSINCDIR) \
-    -I$(XOSERA_M68K_API) \
+    -I$(XOSERA_M68K_API) -I../common \
     -mcpu=68010 -march=68010 -mtune=68010 $(DEFINES)
 GCC_LIBS=$(shell $(CC) --print-search-dirs \
     | grep libraries:\ = \
@@ -54,6 +54,7 @@ SYM=$(PROGRAM_BASENAME).sym
 # Assume source files in Makefile directory are source files for project
 CSOURCES=$(wildcard *.c)
 CSOURCES+=$(wildcard $(XOSERA_M68K_API)/*.c)
+CSOURCES+=$(wildcard ../common/*.c)
 SSOURCES=$(wildcard *.S)
 ASMSOURCES=$(wildcard *.asm)
 SOURCES=$(CSOURCES) $(SSOURCES) $(ASMSOURCES)
