@@ -52,12 +52,12 @@ void draw_pixel(int x, int y, int color)
 {
     uint16_t ux = x;
     uint16_t uy = y;
-    uint8_t  uc = color;
+    uint8_t  uc = color << 4 | color;
     if (ux < terrain_width && uy < screen_height)
     {
-        uint16_t addr = (uy * (terrain_width / 2)) + (ux / 2);
+        uint16_t addr = (uy * (terrain_width / 4)) + (ux / 4);
         xm_setw(WR_ADDR, addr);
-        xm_setbl(SYS_CTRL, (ux & 1) ? 0x03 : 0x0C);
+        xm_setbl(SYS_CTRL, 0x8 >> (ux & 0x3));
         xm_setbh(DATA, uc);
         xm_setbl(DATA, uc);
         xm_setbl(SYS_CTRL, 0x0F);
@@ -72,39 +72,34 @@ void draw_terrain()
 
     for (int y = 0; y < screen_height / 2; y++)
     {
-        fx32 yy           = FXI(y);
-        fx32 perspective  = DIV(yy, FXI(screen_height / 2));
-        fx32 middle_point = FX(0.5f);
-        // int  grass_color  = sinf(20.0f * powf(1.0f - FLT(perspective), 3.0f)) > 0.0f ? GREEN : DARK_GREEN;
-        // int  clip_color   = sinf(80.0f * powf(1.0f - FLT(perspective), 2.0f)) > 0.0f ? RED : WHITE;
-        int  grass_color = GREEN;
-        int  clip_color  = WHITE;
-        fx32 road_width  = FX(0.1f) + MUL(perspective, FX(0.8f));
+        float perspective  = (float)y / (screen_height / 2);
+        float middle_point = 0.5f;
+        int   grass_color  = GREEN;
+        int   clip_color   = WHITE;
+        float road_width   = 0.1f + perspective * 0.8f;
 
-        fx32 clip_width = MUL(road_width, FX(0.15f));
+        float clip_width = road_width * 0.15f;
 
-        road_width = MUL(road_width, FX(0.5f));
+        road_width = road_width * 0.5f;
 
-        fx32 left_grass  = MUL(middle_point - road_width - clip_width, FXI(screen_width)) + FXI(screen_width);
-        fx32 left_clip   = MUL(middle_point - road_width, FXI(screen_width)) + FXI(screen_width);
-        fx32 right_clip  = MUL(middle_point + road_width, FXI(screen_width)) + FXI(screen_width);
-        fx32 right_grass = MUL(middle_point + road_width + clip_width, FXI(screen_width)) + FXI(screen_width);
+        int left_grass  = (middle_point - road_width - clip_width) * screen_width + screen_width;
+        int left_clip   = (middle_point - road_width) * screen_width + screen_width;
+        int right_clip  = (middle_point + road_width) * screen_width + screen_width;
+        int right_grass = (middle_point + road_width + clip_width) * screen_width + screen_width;
 
         for (int x = 0; x < terrain_width; x++)
         {
+            int row = y;
 
-            fx32 xx  = FXI(x);
-            int  row = /*screen_height / 2 +*/ y;
-
-            if (xx >= 0 && xx < left_grass)
+            if (x >= 0 && x < left_grass)
                 draw_pixel(x, row, grass_color);
-            if (xx >= left_grass && xx < left_clip)
+            if (x >= left_grass && x < left_clip)
                 draw_pixel(x, row, clip_color);
-            if (xx >= left_clip && xx < right_clip)
+            if (x >= left_clip && x < right_clip)
                 draw_pixel(x, row, GRAY);
-            if (xx >= right_clip && xx < right_grass)
+            if (x >= right_clip && x < right_grass)
                 draw_pixel(x, row, clip_color);
-            if (xx >= right_grass && xx < FXI(terrain_width))
+            if (x >= right_grass && x < FXI(terrain_width))
                 draw_pixel(x, row, grass_color);
         }
     }
@@ -139,7 +134,7 @@ void update_copper()
 {
     wait_frame();
     // uint16_t addr = (screen_width / 2) * (screen_height / 2);
-    uint16_t addr = screen_width / 2;
+    uint32_t addr = screen_width;
     xm_setw(XR_ADDR, XR_COPPER_MEM);
     for (int y = 0; y < screen_height / 2; ++y)
     {
@@ -151,11 +146,19 @@ void update_copper()
         uint16_t * wp = (uint16_t *)&i;
         xm_setw(XR_DATA, *wp++);
         xm_setw(XR_DATA, *wp);
-        i  = COP_MOVER(addr - offset / 2, PA_LINE_ADDR);
+
+        uint32_t ao = addr - offset;
+        i           = COP_MOVER((uint16_t)(ao / 4), PA_LINE_ADDR);
+        wp          = (uint16_t *)&i;
+        xm_setw(XR_DATA, *wp++);
+        xm_setw(XR_DATA, *wp);
+        addr += terrain_width;
+
+        i  = COP_MOVER((2 * (ao & 0x3)) << 8, PA_HV_SCROLL);
         wp = (uint16_t *)&i;
         xm_setw(XR_DATA, *wp++);
         xm_setw(XR_DATA, *wp);
-        addr += (terrain_width / 2);
+
         uint16_t clip_color = clip_table[y][INT(distance) % 4];
         i                   = COP_MOVEP(clip_color, WHITE);
         wp                  = (uint16_t *)&i;
@@ -179,10 +182,10 @@ void main()
 
     xreg_setw(PA_DISP_ADDR, 0x0000);
     xreg_setw(PA_LINE_ADDR, 0x0000);
-    xreg_setw(PA_LINE_LEN, screen_width / 2);
+    xreg_setw(PA_LINE_LEN, screen_width / 4);
 
-    // Set to bitmap 8-bpp + Hx2 + Vx2
-    xreg_setw(PA_GFX_CTRL, 0x0065);
+    // Set to bitmap 4-bpp + Hx2 + Vx2
+    xreg_setw(PA_GFX_CTRL, 0x0055);
 
     // Blank playfield B
     xreg_setw(PB_GFX_CTRL, 0x0080);
