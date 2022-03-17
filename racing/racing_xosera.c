@@ -135,7 +135,7 @@ void update_copper()
     wait_frame();
     // uint16_t addr = (screen_width / 2) * (screen_height / 2);
     uint32_t addr = screen_width;
-    xm_setw(XR_ADDR, XR_COPPER_MEM);
+    xm_setw(XR_ADDR, XR_COPPER_ADDR);
     for (int y = 0; y < screen_height / 2; ++y)
     {
         fx32 middle_point = MUL(curvature, perspective_table[y]);

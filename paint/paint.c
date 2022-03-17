@@ -120,7 +120,7 @@ void main()
     // tile height to 8
     xreg_setw(PA_TILE_CTRL, 0x0007);
 
-    xm_setw(XR_ADDR, XR_TILE_MEM);
+    xm_setw(XR_ADDR, XR_TILE_ADDR);
     for (size_t i = 0; i < 4096; ++i)
     {
         if (i < sizeof(tile_mem) / sizeof(uint16_t))

@@ -17,11 +17,11 @@
 #define NB_RECTS     100
 #define NB_TRIANGLES 50
 
-#include <cube.h>
-#include <draw_api.h>
+#include "cube.h"
+#include "draw_api.h"
 #include <xosera_m68k_api.h>
 
-#include <io.h>
+//#include <io.h>
 
 extern void install_intr(void);
 extern void remove_intr(void);
@@ -69,7 +69,7 @@ void set_palette(float value)
 {
     for (uint16_t i = 0; i < 256; i++)
     {
-        xm_setw(XR_ADDR, XR_COLOR_MEM | i);
+        xm_setw(XR_ADDR, XR_COLOR_ADDR | i);
 
         uint16_t r = pal[i][0] * value;
         uint16_t g = pal[i][1] * value;
@@ -85,13 +85,13 @@ void xosera_demo()
     // allocations
     cube_model = load_cube();
 
-    xosera_init(2);
+    xosera_init(0);
 
-    init_io();
+    //init_io();
 
     install_intr();
 
-    xm_setw(XR_ADDR, XR_COPPER_MEM);
+    xm_setw(XR_ADDR, XR_COPPER_ADDR);
     uint16_t * wp = (uint16_t *)copper_list;
     for (uint8_t i = 0; i < sizeof(copper_list) / sizeof(uint32_t); i++)
     {
@@ -106,7 +106,7 @@ void xosera_demo()
     // set black background
     xreg_setw(VID_CTRL, 0x0000);
 
-    xd_init(true, 0, 320, 200, 8);
+    xd_init(0, 320, 200, 8);
 
     calc_palette_mono();
     set_palette(1.0f);
@@ -163,7 +163,7 @@ void xosera_demo()
         draw_model(320, 200, &vec_camera, cube_model, &mat_world, &mat_proj, &mat_view, true, true);
 
         xd_swap(true);
-
+/*
         io_event_t io_event;
         if (receive_event(&io_event))
         {
@@ -213,6 +213,7 @@ void xosera_demo()
                     is_running = false;
             }
         }
+*/        
 
         theta += 0.1f;
     }

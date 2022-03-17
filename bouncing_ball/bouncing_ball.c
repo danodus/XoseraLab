@@ -231,7 +231,7 @@ void xosera_demo()
         }
 
     // Set tiles
-    xm_setw(XR_ADDR, XR_TILE_MEM);
+    xm_setw(XR_ADDR, XR_TILE_ADDR);
     for (size_t i = 0; i < 4096; ++i)
     {
         if (i < sizeof(tile_mem) / sizeof(uint16_t))

@@ -7,14 +7,16 @@
 ifndef ROSCO_M68K_DIR
 $(error Please set ROSCO_M68K_DIR to the rosco_m68k directory to use for rosco_m68k building)
 endif
-XOSERA_M68K_API?=../../xosera_m68k_api
-COMMON?=$(XOSERA_M68K_API)/../draw/common
+ifndef XOSERA_DIR
+$(error Please set XOSERA_DIR to the Xosera directory to use for rosco_m68k building)
+endif
+XOSERA_M68K_API=$(XOSERA_DIR)/xosera_m68k_api
 
 EXTRA_CFLAGS?=-g -O3 -fomit-frame-pointer
 #EXTRA_VASMFLAGS?=-showopt
 SYSINCDIR?=$(ROSCO_M68K_DIR)/code/software/libs/build/include
 SYSLIBDIR?=$(ROSCO_M68K_DIR)/code/software/libs/build/lib
-DEFINES=-DROSCO_M68K -DHW_MULT
+DEFINES=-DROSCO_M68K
 CFLAGS=-std=c99 -ffreestanding -ffunction-sections -fdata-sections \
     -Wall -Wextra -Wno-unused-function -I$(SYSINCDIR) \
     -I$(XOSERA_M68K_API) -I$(COMMON) -I../common\
@@ -27,7 +29,7 @@ LIBS=-lprintf -lcstdlib -lm -lmachine -lstart_serial -lgcc
 ASFLAGS=-mcpu=68010 -march=68010
 LDFLAGS=-T $(SYSLIBDIR)/ld/serial/rosco_m68k_program.ld -L $(SYSLIBDIR) \
     -Map=$(MAP) --gc-sections --oformat=elf32-m68k
-VASMFLAGS=-Felf -m68010 -quiet -Lnf $(DEFINES)
+VASMFLAGS=-Felf -m68010 -quiet -Lnf -I$(XOSERA_M68K_API) $(DEFINES)
 CC=m68k-elf-gcc
 AS=m68k-elf-as
 LD=m68k-elf-ld
@@ -56,7 +58,6 @@ SYM=$(PROGRAM_BASENAME).sym
 CSOURCES=$(wildcard *.c)
 CSOURCES+=$(wildcard $(XOSERA_M68K_API)/*.c)
 CSOURCES+=$(wildcard ../common/*.c)
-CSOURCES+=$(wildcard $(COMMON)/*.c)
 SSOURCES=$(wildcard *.S)
 ASMSOURCES=$(wildcard *.asm)
 ASMSOURCES+=$(wildcard $(COMMON)/*.asm)

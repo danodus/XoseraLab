@@ -31,12 +31,7 @@ typedef int fx32;
 #define FXI(x) ((fx32)_INT_TO_FIXED(x, SCALE))
 #define INT(x) ((int)_FIXED_TO_INT(x, SCALE))
 #define FLT(x) ((float)_FIXED_TO_FLOAT(x, SCALE))
-#ifdef HW_MULT
-fx32 xd_hw_mult(fx32 x, fx32 y);
-#define MUL(x, y) xd_hw_mult(x, y)
-#else
 #define MUL(x, y) _MUL(x, y, SCALE)
-#endif
 #define DIV(x, y)  _DIV(x, y, SCALE)
 #define DIV2(x, y) _DIV2(x, y, SCALE, 2)
 
