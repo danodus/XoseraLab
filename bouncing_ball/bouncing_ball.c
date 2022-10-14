@@ -16,151 +16,150 @@ extern void remove_intr(void);
 
 extern volatile uint32_t XFrameCount;
 
-#define WIDTH_A  40
-#define HEIGHT_A 30
 
-#define START_B  (WIDTH_A * HEIGHT_A)
-#define WIDTH_B  320
+#define XR_TILE_ADDR 0x4000
+
+#define WIDTH 640
+#define NB_COLS (WIDTH / 8)
+
+#define START_A     0
+#define WIDTH_A     40
+#define HEIGHT_A    30
+
+#define START_B (START_A + (WIDTH_A * HEIGHT_A))
+#define WIDTH_B 320
 #define HEIGHT_B 240
 
+#define START_BOBS (START_B + (WIDTH_B * HEIGHT_B / 4))
+
 uint16_t tile_mem[] = {
-    // 0
-    0x8888,
-    0x8888,
-    0x8000,
-    0x0008,
-    0x8000,
-    0x0008,
-    0x8000,
-    0x0008,
-    0x8000,
-    0x0008,
-    0x8000,
-    0x0008,
-    0x8000,
-    0x0008,
-    0x8888,
-    0x8888,
+// 0
+        0x8888, 0x8888,
+        0x8000, 0x0008,
+        0x8000, 0x0008,
+        0x8000, 0x0008,
+        0x8000, 0x0008,
+        0x8000, 0x0008,
+        0x8000, 0x0008,
+        0x8888, 0x8888,
+// 1
+        0x8888, 0x8888,
+        0x8000, 0x0008,
+        0x8002, 0x2008,
+        0x8002, 0x2008,
+        0x8002, 0x2008,
+        0x8002, 0x2008,
+        0x8000, 0x0008,
+        0x8888, 0x8888,
+};
 
-    // 1
-    0x000f,
-    0xffff,
-    0x0ff1,
-    0x1111,
-    0xf111,
-    0xf111,
-    0xf11f,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
+uint16_t ball_bob[] = {
+// 0
+        0x000f, 0xffff, 0xffff, 0xf000,
+        0x0ff1, 0x1111, 0x1111, 0x1ff0,
+        0xf111, 0xf111, 0x1111, 0x111f,
+        0xf11f, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+// 1
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0xf111, 0x1111, 0x1111, 0x111f,
+        0x0ff1, 0x1111, 0x1111, 0x1ff0,
+        0x000f, 0xffff, 0xffff, 0xf000
+};
 
-    // 2
-    0xffff,
-    0xf000,
-    0x1111,
-    0x1ff0,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
+uint8_t map[80*30] = {
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+};
 
-    // 3
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0xf111,
-    0x1111,
-    0x0ff1,
-    0x1111,
-    0x000f,
-    0xffff,
-
-    // 4
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x111f,
-    0x1111,
-    0x1ff0,
-    0xffff,
-    0xf000};
-
-void draw_background()
-{
+void draw_background() {
     xm_setw(WR_INCR, 0x0001);
-    xm_setw(WR_ADDR, 0x0000);
-
-    for (int y = 0; y < HEIGHT_A; ++y)
-        for (int x = 0; x < WIDTH_A; ++x)
+    xm_setw(WR_ADDR, START_A);
+    for (int y = 0; y < HEIGHT_A; ++y) {
+        for (int x = 0; x < WIDTH_A; ++x) {
             xm_setw(DATA, 0x0000);
-}
-
-static void draw_pixel(int x, int y, int color)
-{
-    uint16_t ux = x;
-    uint16_t uy = y;
-    uint8_t  uc = color;
-    if (ux < WIDTH_B && uy < HEIGHT_B)
-    {
-        uint16_t addr = START_B + (uy * (WIDTH_B / 2)) + (ux / 2);
-        xm_setw(WR_ADDR, addr);
-        xm_setbl(SYS_CTRL, (ux & 1) ? 0x03 : 0x0C);
-        xm_setbh(DATA, uc);
-        xm_setbl(DATA, uc);
-        xm_setbl(SYS_CTRL, 0x0F);
-    }
-}
-
-static void draw_sprite(int x, int y, uint16_t * data, bool is_visible)
-{
-    uint32_t * p = (uint32_t *)data;
-    for (int yy = 0; yy < 8; ++yy)
-    {
-        uint32_t t = *p;
-        for (int xx = 0; xx < 8; ++xx)
-        {
-            uint8_t v = (t >> 4 * (7 - xx)) & 0xF;
-            draw_pixel(x + xx, y + yy, is_visible ? v : 0x00);
         }
-        p++;
     }
 }
 
-void draw_ball(int x, int y, bool is_visible)
-{
-    draw_sprite(x, y, tile_mem + 16 * 1, is_visible);
-    draw_sprite(x + 8, y, tile_mem + 16 * 2, is_visible);
-    draw_sprite(x, y + 8, tile_mem + 16 * 3, is_visible);
-    draw_sprite(x + 8, y + 8, tile_mem + 16 * 4, is_visible);
+void init_bobs() {
+        xm_setw(WR_INCR, 0x0001);
+        xm_setw(WR_ADDR, START_BOBS);
+
+        for (size_t i = 0; i < sizeof(ball_bob) / sizeof(uint16_t); ++i)
+            xm_setw(DATA, ball_bob[i]);
+}
+
+void wait_blit_ready() {
+    uint16_t v;
+    do {
+      v = xm_getw(SYS_CTRL);
+    } while ((v & 0x4000) != 0x0000);
+}
+
+void wait_blit_done() {
+    uint16_t v;
+    do {
+      v = xm_getw(SYS_CTRL);
+    } while ((v & 0x2000) != 0x0000);
+}
+
+void init_draw_ball() {
+    xreg_setw(BLIT_MOD_A, 0x0000);
+    xreg_setw(BLIT_SRC_A, START_BOBS);
+    xreg_setw(BLIT_SRC_B, 0xFFFF);
+    xreg_setw(BLIT_VAL_C, 0x0000);
+    xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4);
+    xreg_setw(BLIT_SHIFT, 0xFF00);
+    xreg_setw(BLIT_LINES, 15);
+}
+
+void draw_ball(uint16_t x, uint16_t y, bool visible) {
+    uint16_t shift = x & 0x3;
+    xreg_setw(BLIT_CTRL, 0x0002 | (visible ? 0x0000 : 0x0004));
+    xreg_setw(BLIT_MOD_A, shift > 0 ? 0xFFFF : 0x0000);
+    xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4 - (shift > 0 ? 1 : 0));
+    xreg_setw(BLIT_DST_D, START_B + y * WIDTH_B / 4 + (x >> 2));
+    uint16_t mask_shift[] = {0xFF00, 0x7801, 0x3C02, 0x1E03};
+    xreg_setw(BLIT_SHIFT, mask_shift[shift]);
+    xreg_setw(BLIT_LINES, 15);
+    wait_blit_ready();
+    xreg_setw(BLIT_WORDS, 3 + (shift > 0 ? 1 : 0));
 }
 
 void wait_frame()
@@ -170,6 +169,54 @@ void wait_frame()
         ;
 }
 
+// set first 16 colors to default VGA colors
+static void set_default_colors()
+{
+    static const uint16_t def_colors16_a[16] = {0x0000,         // black
+                                              0x000a,         // blue
+                                              0x00a0,         // green
+                                              0x00aa,         // cyan
+                                              0x0a00,         // red
+                                              0x0a0a,         // magenta
+                                              0x0a50,         // brown
+                                              0x0aaa,         // white
+                                              0x0555,         // gray
+                                              0x055f,         // light blue
+                                              0x05f5,         // light green
+                                              0x05ff,         // light cyan
+                                              0x0f55,         // light red
+                                              0x0f5f,         // light magenta
+                                              0x0ff5,         // yellow
+                                              0x0fff};        // bright white
+
+    static const uint16_t def_colors16_b[16] = {0x0000,         // black
+                                              0xf00a,         // blue
+                                              0xf0a0,         // green
+                                              0xf0aa,         // cyan
+                                              0xfa00,         // red
+                                              0xfa0a,         // magenta
+                                              0xfa50,         // brown
+                                              0xfaaa,         // white
+                                              0xf555,         // gray
+                                              0xf55f,         // light blue
+                                              0xf5f5,         // light green
+                                              0xf5ff,         // light cyan
+                                              0xff55,         // light red
+                                              0xff5f,         // light magenta
+                                              0xfff5,         // yellow
+                                              0xffff};        // bright white
+
+    // Playfield A
+    xmem_set_addr(XR_COLOR_ADDR);
+    for (uint16_t i = 0; i < 16; i++)
+        xmem_setw_next(def_colors16_a[i]);
+    
+    // Playfield B
+    xmem_set_addr(XR_COLOR_ADDR + 0x100);
+    for (uint16_t i = 0; i < 16; i++)
+        xmem_setw_next(def_colors16_b[i]);
+}
+
 void xosera_demo()
 {
 
@@ -177,72 +224,49 @@ void xosera_demo()
 
     install_intr();
 
-    //
-    // Playfield A
-    //
+    set_default_colors();
 
-    xreg_setw(PA_DISP_ADDR, 0x0000);
+  // playfield A
+
+    xreg_setw(PA_DISP_ADDR, START_A);
     xreg_setw(PA_LINE_LEN, WIDTH_A);
 
-    // Set to tiled 4-bpp + Hx2 + Vx2
+    // set to tiled 4-bpp, Hx2, Vx2
     xreg_setw(PA_GFX_CTRL, 0x0015);
 
     // tile height to 8
     xreg_setw(PA_TILE_CTRL, 0x0007);
 
-    //
-    // Playfield B
-    //
+    // set tiles
+    xm_setw(WR_XADDR, XR_TILE_ADDR);
+    for (size_t i = 0; i < sizeof(tile_mem) / sizeof(uint16_t); ++i)
+        xm_setw(XDATA, tile_mem[i]);
 
+    init_bobs();
+
+    draw_background(1);
+
+    // playfield B
     xreg_setw(PB_DISP_ADDR, START_B);
-    xreg_setw(PB_LINE_LEN, WIDTH_B / 2);
+    xreg_setw(PB_LINE_LEN, WIDTH_B / 4);
 
-    // Set to bitmap 8-bpp + Hx2 + Vx2
-    xreg_setw(PB_GFX_CTRL, 0x0065);
+    // set to bitmap 4-bpp, Hx2, Vx2
+    xreg_setw(PB_GFX_CTRL, 0x0055);
 
-    // Clear playfield B
+    // clear playfield B
 
-    xm_setw(WR_ADDR, START_B);
-    xm_setw(WR_INCR, 1);
+    xreg_setw(BLIT_CTRL, 0x0003);
+    xreg_setw(BLIT_SRC_A, 0x0000);
+    xreg_setw(BLIT_SRC_B, 0xFFFF);
+    xreg_setw(BLIT_VAL_C, 0x0000);
+    xreg_setw(BLIT_MOD_D, 0x0000);
+    xreg_setw(BLIT_DST_D, START_B);
+    xreg_setw(BLIT_SHIFT, 0xFF00);
+    xreg_setw(BLIT_LINES, HEIGHT_B - 1);
+    xreg_setw(BLIT_WORDS, WIDTH_B / 4 - 1);
+    wait_blit_done();
 
-    for (int y = 0; y < HEIGHT_B; ++y)
-        for (int x = 0; x < WIDTH_B / 2; ++x)
-        {
-            if (x == 0)
-            {
-                xm_setw(DATA, 0x0202);
-            }
-            else if (x == WIDTH_B / 2 - 1)
-            {
-                xm_setw(DATA, 0x0303);
-            }
-            else if (y == 0)
-            {
-                xm_setw(DATA, 0x0404);
-            }
-            else if (y == HEIGHT_B - 1)
-            {
-                xm_setw(DATA, 0x0505);
-            }
-            else
-            {
-                xm_setw(DATA, 0x0000);
-            }
-        }
-
-    // Set tiles
-    xm_setw(XR_ADDR, XR_TILE_ADDR);
-    for (size_t i = 0; i < 4096; ++i)
-    {
-        if (i < sizeof(tile_mem) / sizeof(uint16_t))
-        {
-            xm_setw(XR_DATA, tile_mem[i]);
-        }
-        else
-        {
-            xm_setw(XR_DATA, 0x0000);
-        }
-    }
+    init_draw_ball();
 
     draw_background();
     int x  = 0;
@@ -253,7 +277,6 @@ void xosera_demo()
     while (1)
     {
         wait_frame();
-
         draw_ball(x, y, false);
 
         x += sx;

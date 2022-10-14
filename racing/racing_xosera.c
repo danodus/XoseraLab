@@ -12,7 +12,6 @@
 #include <xosera_m68k_api.h>
 
 #include <fx.h>
-#include <io.h>
 
 #define ENABLE_IO 0
 
@@ -135,7 +134,7 @@ void update_copper()
     wait_frame();
     // uint16_t addr = (screen_width / 2) * (screen_height / 2);
     uint32_t addr = screen_width;
-    xm_setw(XR_ADDR, XR_COPPER_ADDR);
+    xm_setw(WR_XADDR, XR_COPPER_ADDR);
     for (int y = 0; y < screen_height / 2; ++y)
     {
         fx32 middle_point = MUL(curvature, perspective_table[y]);
@@ -144,31 +143,31 @@ void update_copper()
 
         uint32_t   i  = COP_WAIT_V(screen_height + y * 2);
         uint16_t * wp = (uint16_t *)&i;
-        xm_setw(XR_DATA, *wp++);
-        xm_setw(XR_DATA, *wp);
+        xm_setw(XDATA, *wp++);
+        xm_setw(XDATA, *wp);
 
         uint32_t ao = addr - offset;
         i           = COP_MOVER((uint16_t)(ao / 4), PA_LINE_ADDR);
         wp          = (uint16_t *)&i;
-        xm_setw(XR_DATA, *wp++);
-        xm_setw(XR_DATA, *wp);
+        xm_setw(XDATA, *wp++);
+        xm_setw(XDATA, *wp);
         addr += terrain_width;
 
         i  = COP_MOVER((2 * (ao & 0x3)) << 8, PA_HV_SCROLL);
         wp = (uint16_t *)&i;
-        xm_setw(XR_DATA, *wp++);
-        xm_setw(XR_DATA, *wp);
+        xm_setw(XDATA, *wp++);
+        xm_setw(XDATA, *wp);
 
         uint16_t clip_color = clip_table[y][INT(distance) % 4];
         i                   = COP_MOVEP(clip_color, WHITE);
         wp                  = (uint16_t *)&i;
-        xm_setw(XR_DATA, *wp++);
-        xm_setw(XR_DATA, *wp);
+        xm_setw(XDATA, *wp++);
+        xm_setw(XDATA, *wp);
     }
     uint32_t   i  = COP_END();
     uint16_t * wp = (uint16_t *)&i;
-    xm_setw(XR_DATA, *wp++);
-    xm_setw(XR_DATA, *wp);
+    xm_setw(XDATA, *wp++);
+    xm_setw(XDATA, *wp);
 }
 
 void main()
@@ -229,54 +228,6 @@ void main()
         // t1                 = t2;
         update(elapsed_time);
         update_copper();
-
-#if ENABLE_IO
-        io_event_t io_event;
-        if (receive_event(&io_event))
-        {
-            if (io_event.type == IO_KEYDOWN)
-            {
-                switch (io_event.scancode)
-                {
-                    case IO_SCANCODE_UP:
-                        key_pressed |= 1;
-                        break;
-                    case IO_SCANCODE_DOWN:
-                        key_pressed |= 2;
-                        break;
-                    case IO_SCANCODE_LEFT:
-                        key_pressed |= 4;
-                        break;
-                    case IO_SCANCODE_RIGHT:
-                        key_pressed |= 8;
-                        break;
-                }
-            }
-            else if (io_event.type == IO_KEYUP)
-            {
-                switch (io_event.scancode)
-                {
-                    case IO_SCANCODE_ESC:
-                        is_running = false;
-                        break;
-                    case IO_SCANCODE_UP:
-                        key_pressed &= ~1;
-
-                        break;
-                    case IO_SCANCODE_DOWN:
-                        key_pressed &= ~2;
-                        break;
-                    case IO_SCANCODE_LEFT:
-                        key_pressed &= ~4;
-
-                        break;
-                    case IO_SCANCODE_RIGHT:
-                        key_pressed &= ~8;
-                        break;
-                }
-            }
-        }
-#endif        // ENABLE_IO
     }
 
     // disable Copper
