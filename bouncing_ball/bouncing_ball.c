@@ -140,10 +140,9 @@ void wait_blit_done() {
 }
 
 void init_draw_ball() {
-    xreg_setw(BLIT_MOD_A, 0x0000);
-    xreg_setw(BLIT_SRC_A, START_BOBS);
-    xreg_setw(BLIT_SRC_B, 0xFFFF);
-    xreg_setw(BLIT_VAL_C, 0x0000);
+    xreg_setw(BLIT_MOD_S, 0x0000);
+    xreg_setw(BLIT_SRC_S, START_BOBS);
+    xreg_setw(BLIT_VAL_C, 0xFFFF);
     xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4);
     xreg_setw(BLIT_SHIFT, 0xFF00);
     xreg_setw(BLIT_LINES, 15);
@@ -151,8 +150,9 @@ void init_draw_ball() {
 
 void draw_ball(uint16_t x, uint16_t y, bool visible) {
     uint16_t shift = x & 0x3;
-    xreg_setw(BLIT_CTRL, 0x0002 | (visible ? 0x0000 : 0x0004));
-    xreg_setw(BLIT_MOD_A, shift > 0 ? 0xFFFF : 0x0000);
+    xreg_setw(BLIT_CTRL, 0x0002);
+    xreg_setw(BLIT_VAL_C, visible ? 0xFFFF : 0x0000);
+    xreg_setw(BLIT_MOD_S, shift > 0 ? 0xFFFF : 0x0000);
     xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4 - (shift > 0 ? 1 : 0));
     xreg_setw(BLIT_DST_D, START_B + y * WIDTH_B / 4 + (x >> 2));
     uint16_t mask_shift[] = {0xFF00, 0x7801, 0x3C02, 0x1E03};
@@ -254,11 +254,9 @@ void xosera_demo()
     xreg_setw(PB_GFX_CTRL, 0x0055);
 
     // clear playfield B
-
     xreg_setw(BLIT_CTRL, 0x0003);
-    xreg_setw(BLIT_SRC_A, 0x0000);
-    xreg_setw(BLIT_SRC_B, 0xFFFF);
-    xreg_setw(BLIT_VAL_C, 0x0000);
+    xreg_setw(BLIT_SRC_S, 0x0000);
+    xreg_setw(BLIT_VAL_C, 0xFFFF);
     xreg_setw(BLIT_MOD_D, 0x0000);
     xreg_setw(BLIT_DST_D, START_B);
     xreg_setw(BLIT_SHIFT, 0xFF00);
