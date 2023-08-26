@@ -27,7 +27,7 @@ GCC_LIBS=$(shell $(CC) --print-search-dirs \
     | sed 's/:/m68000\/ -L/g')m68000/
 LIBS=-lprintf -lcstdlib -lmachine -lstart_serial -lgpio -lm -lgcc
 ASFLAGS=-mcpu=68010 -march=68010
-LDFLAGS=-T $(SYSLIBDIR)/ld/serial/rosco_m68k_program.ld -L $(SYSLIBDIR) \
+LDFLAGS=-T $(SYSLIBDIR)/ld/serial/hugerom_rosco_m68k_program.ld -L $(SYSLIBDIR) \
     -Map=$(MAP) --gc-sections --oformat=elf32-m68k
 VASMFLAGS=-Felf -m68010 -quiet -Lnf -I$(XOSERA_M68K_API) $(DEFINES)
 CC=m68k-elf-gcc
