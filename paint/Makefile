@@ -56,7 +56,7 @@ SYM=$(PROGRAM_BASENAME).sym
 
 # Assume source files in Makefile directory are source files for project
 CSOURCES=$(wildcard *.c)
-CSOURCES+=$(wildcard $(XOSERA_M68K_API)/*.c)
+CSOURCES+=$(XOSERA_M68K_API)/xosera_m68k_api.c
 CSOURCES+=$(wildcard ../common/*.c)
 SSOURCES=$(wildcard *.S)
 ASMSOURCES=$(wildcard *.asm)

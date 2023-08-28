@@ -1,61 +1,29 @@
 #include "io.h"
 
 #include <basicio.h>
-#include <gpio.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-const int rosco_sck  = GPIO2;
-const int rosco_mosi = GPIO3;
-const int rosco_miso = GPIO4;
-
-const int sck_period = 100;
-
-static bool receive_bit()
-{
-    int b;
-
-    digitalWrite(rosco_sck, true);
-    delay(sck_period);
-    b = digitalRead(rosco_miso);
-    digitalWrite(rosco_sck, false);
-    delay(sck_period);
-
-    return b != 0;
-}
+#include <stdio.h>
 
 static unsigned char receive_byte(bool is_blocking, bool * is_byte_received)
 {
-    unsigned char c = 0;
+    if (is_blocking)
+        while (!checkchar());
+
+    if (is_blocking || checkchar()) {
+        unsigned char c = readchar();
+        if (is_byte_received)
+            *is_byte_received = true;
+        return c;
+    }
 
     if (is_byte_received)
         *is_byte_received = false;
-
-    // wait until the start bit is received
-    while (!receive_bit())
-    {
-        if (!is_blocking)
-            return 0;
-    }
-
-    for (int i = 0; i < 8; ++i)
-    {
-        c <<= 1;
-        c |= (receive_bit() ? 1 : 0);
-    }
-
-    if (is_byte_received)
-        *is_byte_received = true;
-    return c;
+    return 0;
 }
 
 void init_io()
 {
-    pinMode(GPIO1, OUTPUT);        // CS
-    pinMode(GPIO2, OUTPUT);        // SCK
-    pinMode(GPIO3, OUTPUT);        // MOSI
-    pinMode(GPIO4, INPUT);         // MISO
-
     // clear queued events
     bool is_byte_received;
     do

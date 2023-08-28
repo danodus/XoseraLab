@@ -10,11 +10,10 @@ int main(int argc, char ** argv)
 
     print("\033[H\033[2J");
     println("I/O Test");
-    println("(press a key to exit)");
 
     init_io();
 
-    while (!checkchar())
+    while (1)
     {
         io_event_t io_event;
         if (receive_event(&io_event))
