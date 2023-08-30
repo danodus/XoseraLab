@@ -183,6 +183,8 @@ void main()
     xreg_setw(PA_LINE_ADDR, 0x0000);
     xreg_setw(PA_LINE_LEN, screen_width / 4);
 
+    xreg_setw(VID_RIGHT, 640);
+
     // Set to bitmap 4-bpp + Hx2 + Vx2
     xreg_setw(PA_GFX_CTRL, 0x0055);
 

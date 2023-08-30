@@ -13,11 +13,6 @@
 
 #include <io.h>
 
-extern void install_intr(void);
-extern void remove_intr(void);
-
-extern volatile uint32_t XFrameCount;
-
 #define WIDTH  40
 #define HEIGHT 30
 
@@ -91,8 +86,13 @@ void main()
     xreg_setw(PA_LINE_ADDR, 0x0000);
     xreg_setw(PA_LINE_LEN, WIDTH);
 
+    xreg_setw(VID_RIGHT, 640);    
+
     // Set to tiled 4-bpp + Hx2 + Vx2
     xreg_setw(PA_GFX_CTRL, 0x0015);
+
+    // blank PB
+    xreg_setw(PB_GFX_CTRL, 0x0080);
 
     // tile height to 8
     xreg_setw(PA_TILE_CTRL, 0x0007);

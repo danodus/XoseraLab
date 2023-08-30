@@ -230,6 +230,8 @@ void xosera_demo()
 
     set_default_colors();
 
+    xreg_setw(VID_RIGHT, 640);
+
   // playfield A
 
     xreg_setw(PA_DISP_ADDR, START_A);

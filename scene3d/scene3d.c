@@ -69,14 +69,14 @@ void set_palette(float value)
 {
     for (uint16_t i = 0; i < 256; i++)
     {
-        xm_setw(XR_ADDR, XR_COLOR_ADDR | i);
+        xm_setw(WR_XADDR, XR_COLOR_ADDR | i);
 
         uint16_t r = pal[i][0] * value;
         uint16_t g = pal[i][1] * value;
         uint16_t b = pal[i][2] * value;
 
         uint16_t c = (r << 8) | (g << 4) | b;
-        xm_setw(XR_DATA, c);        // set palette data
+        xm_setw(XDATA, c);        // set palette data
     }
 }
 
@@ -91,17 +91,22 @@ void xosera_demo()
 
     install_intr();
 
-    xm_setw(XR_ADDR, XR_COPPER_ADDR);
+    xm_setw(WR_XADDR, XR_COPPER_ADDR);
     uint16_t * wp = (uint16_t *)copper_list;
     for (uint8_t i = 0; i < sizeof(copper_list) / sizeof(uint32_t); i++)
     {
-        xm_setw(XR_DATA, *wp++);
-        xm_setw(XR_DATA, *wp++);
+        xm_setw(XDATA, *wp++);
+        xm_setw(XDATA, *wp++);
     }
 
     xreg_setw(PA_DISP_ADDR, 0x0000);
     xreg_setw(PA_LINE_ADDR, 0x0000);
     xreg_setw(PA_LINE_LEN, 160);
+
+    xreg_setw(VID_RIGHT, 640);
+
+    // blank PB
+    xreg_setw(PB_GFX_CTRL, 0x0080);
 
     // set black background
     xreg_setw(VID_CTRL, 0x0000);

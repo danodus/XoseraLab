@@ -25,7 +25,7 @@ GCC_LIBS=$(shell $(CC) --print-search-dirs \
     | grep libraries:\ = \
     | sed 's/libraries: =/-L/g' \
     | sed 's/:/m68000\/ -L/g')m68000/
-LIBS=-lprintf -lcstdlib -lm -lmachine -lstart_serial -lgcc
+LIBS=-lprintf -lrosco_m68k -lm -lmachine -lstart_serial -lgcc
 ASFLAGS=-mcpu=68010 -march=68010
 LDFLAGS=-T $(SYSLIBDIR)/ld/serial/rosco_m68k_program.ld -L $(SYSLIBDIR) \
     -Map=$(MAP) --gc-sections --oformat=elf32-m68k
@@ -56,7 +56,7 @@ SYM=$(PROGRAM_BASENAME).sym
 
 # Assume source files in Makefile directory are source files for project
 CSOURCES=$(wildcard *.c)
-CSOURCES+=$(wildcard $(XOSERA_M68K_API)/*.c)
+CSOURCES+=$(XOSERA_M68K_API)/xosera_m68k_api.c
 CSOURCES+=$(wildcard ../common/*.c)
 SSOURCES=$(wildcard *.S)
 ASMSOURCES=$(wildcard *.asm)
