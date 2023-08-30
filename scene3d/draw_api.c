@@ -69,6 +69,20 @@ static void draw_pixel(int x, int y, int color)
     }
 }
 
+void wait_blit_ready() {
+    uint16_t v;
+    do {
+      v = xm_getw(SYS_CTRL);
+    } while ((v & 0x4000) != 0x0000);
+}
+
+void wait_blit_done() {
+    uint16_t v;
+    do {
+      v = xm_getw(SYS_CTRL);
+    } while ((v & 0x2000) != 0x0000);
+}
+
 void xd_init(int start_line, int width, int height, int bpp)
 {
     sw_init_rasterizer(draw_pixel);
@@ -138,7 +152,14 @@ uint16_t xd_swap_copper(bool is_vsync_enabled)
 
 void xd_clear()
 {
-    // TODO: Clear with blitter
+    xreg_setw(BLIT_CTRL, 0x0001);
+    xreg_setw(BLIT_SRC_S, 0x0000);
+    xreg_setw(BLIT_MOD_D, 0x0000);
+    xreg_setw(BLIT_DST_D, g_cur_draw_buffer_addr);
+    xreg_setw(BLIT_SHIFT, 0xFF00);
+    xreg_setw(BLIT_LINES, 200 - 1);
+    xreg_setw(BLIT_WORDS, 320 / 2 - 1);
+    wait_blit_done();    
 }
 
 void xd_finish()
