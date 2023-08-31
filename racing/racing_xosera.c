@@ -179,17 +179,12 @@ void main()
     xosera_init(0);
     install_intr();
 
-    xreg_setw(PA_DISP_ADDR, 0x0000);
-    xreg_setw(PA_LINE_ADDR, 0x0000);
+    uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, screen_width / 4);
 
-    xreg_setw(VID_RIGHT, 640);
-
     // Set to bitmap 4-bpp + Hx2 + Vx2
+    uint16_t old_pa_gfx_ctrl = xreg_getw(PA_GFX_CTRL);
     xreg_setw(PA_GFX_CTRL, 0x0055);
-
-    // Blank playfield B
-    xreg_setw(PB_GFX_CTRL, 0x0080);
 
     init();
 
@@ -216,10 +211,9 @@ void main()
 
     key_pressed = 1;        // temp
 
-    bool is_running = true;
     // uint16_t t1         = xm_getw(TIMER);
 
-    while (is_running)
+    while (!checkchar())
     {
 
         // uint16_t t2 = xm_getw(TIMER);
@@ -231,8 +225,13 @@ void main()
         update(elapsed_time);
         update_copper();
     }
+    readchar();
 
     // disable Copper
     xreg_setw(COPP_CTRL, 0x0000);
+
+    xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
+    xreg_setw(PA_LINE_LEN, old_pa_line_len);
+
     remove_intr();
 }

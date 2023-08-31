@@ -46,6 +46,7 @@ const uint16_t defpal[16] = {
 };
 
 uint16_t pal[256][3];
+uint16_t old_palette[256];
 
 const uint32_t copper_list[] = {COP_WAIT_V(40),
                                 COP_MOVER(0x0065, PA_GFX_CTRL),        // Set to 8-bpp + Hx2 + Vx2
@@ -80,6 +81,24 @@ void set_palette(float value)
     }
 }
 
+void save_palette()
+{
+    for (uint16_t i = 0; i < 256; i++)
+    {
+        xm_setw(RD_XADDR, XR_COLOR_ADDR | i);
+        old_palette[i] = xm_getw(XDATA); 
+    }
+}
+
+void restore_palette()
+{
+    for (uint16_t i = 0; i < 256; i++)
+    {
+        xm_setw(WR_XADDR, XR_COLOR_ADDR | i);
+        xm_setw(XDATA, old_palette[i]);        // set palette data
+    }
+}
+
 void xosera_demo()
 {
     // allocations
@@ -99,19 +118,14 @@ void xosera_demo()
         xm_setw(XDATA, *wp++);
     }
 
-    xreg_setw(PA_DISP_ADDR, 0x0000);
-    xreg_setw(PA_LINE_ADDR, 0x0000);
+    uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, 160);
 
-    xreg_setw(VID_RIGHT, 640);
-
-    // blank PB
-    xreg_setw(PB_GFX_CTRL, 0x0080);
-
-    // set black background
-    xreg_setw(VID_CTRL, 0x0000);
+    uint16_t old_pa_gfx_ctrl = xreg_getw(PA_GFX_CTRL);
 
     xd_init(0, 320, 200, 8);
+
+    save_palette();
 
     calc_palette_mono();
     set_palette(1.0f);
@@ -128,11 +142,10 @@ void xosera_demo()
     mat4x4 mat_proj = matrix_make_projection(320, 200, 60.0f);
 
     int  mouse_x = 0, mouse_y = 0;
-    bool is_running = true;
 
     vec3d vec_camera = {FX(0.0f), FX(0.0f), FX(0.0f), FX(1.0f)};
 
-    while (is_running)
+    while (!checkchar())
     {
         xd_clear();
 
@@ -222,9 +235,16 @@ void xosera_demo()
 
         theta += 0.1f;
     }
+    readchar();
 
     // disable Copper
     xreg_setw(COPP_CTRL, 0x0000);
+
+    restore_palette();
+
+    // restore Xosera registers
+    xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
+    xreg_setw(PA_LINE_LEN, old_pa_line_len);
 
     remove_intr();
 }

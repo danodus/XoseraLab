@@ -107,6 +107,8 @@ uint8_t map[80*30] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
+uint16_t old_palette[512];
+
 void draw_background() {
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, START_A);
@@ -173,6 +175,22 @@ void wait_frame()
         ;
 }
 
+void save_palette()
+{
+    for (uint16_t i = 0; i < 512; i++)
+    {
+        xm_setw(RD_XADDR, XR_COLOR_ADDR | i);
+        old_palette[i] = xm_getw(XDATA); 
+    }
+}
+
+void restore_palette()
+{
+    xmem_setw_next_addr(XR_COLOR_ADDR);
+    for (uint16_t i = 0; i < 512; i++)
+        xmem_setw_next(old_palette[i]);        // set palette data
+}
+
 // set first 16 colors to default VGA colors
 static void set_default_colors()
 {
@@ -211,12 +229,12 @@ static void set_default_colors()
                                               0xffff};        // bright white
 
     // Playfield A
-    xmem_set_addr(XR_COLOR_ADDR);
+    xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 16; i++)
         xmem_setw_next(def_colors16_a[i]);
     
     // Playfield B
-    xmem_set_addr(XR_COLOR_ADDR + 0x100);
+    xmem_setw_next_addr(XR_COLOR_ADDR + 0x100);
     for (uint16_t i = 0; i < 16; i++)
         xmem_setw_next(def_colors16_b[i]);
 }
@@ -228,19 +246,22 @@ void xosera_demo()
 
     install_intr();
 
+    save_palette();
     set_default_colors();
 
-    xreg_setw(VID_RIGHT, 640);
+    // playfield A
 
-  // playfield A
-
+    uint16_t old_pa_disp_addr = xreg_getw(PA_DISP_ADDR);
     xreg_setw(PA_DISP_ADDR, START_A);
+    uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, WIDTH_A);
 
     // set to tiled 4-bpp, Hx2, Vx2
+    uint16_t old_pa_gfx_ctrl = xreg_getw(PA_GFX_CTRL);
     xreg_setw(PA_GFX_CTRL, 0x0015);
 
     // tile height to 8
+    uint16_t old_pa_tile_ctrl = xreg_getw(PA_TILE_CTRL);
     xreg_setw(PA_TILE_CTRL, 0x0007);
 
     // set tiles
@@ -253,10 +274,13 @@ void xosera_demo()
     draw_background(1);
 
     // playfield B
+    uint16_t old_pb_disp_addr = xreg_getw(PB_DISP_ADDR);
     xreg_setw(PB_DISP_ADDR, START_B);
+    uint16_t old_pb_line_len = xreg_getw(PB_LINE_LEN);
     xreg_setw(PB_LINE_LEN, WIDTH_B / 4);
 
     // set to bitmap 4-bpp, Hx2, Vx2
+    uint16_t old_pb_gfx_ctrl = xreg_getw(PB_GFX_CTRL);
     xreg_setw(PB_GFX_CTRL, 0x0055);
 
     // clear playfield B
@@ -278,7 +302,7 @@ void xosera_demo()
     int sx = 1;
     int sy = 1;
 
-    while (1)
+    while (!checkchar())
     {
         wait_frame();
         draw_ball(x, y, false);
@@ -307,4 +331,18 @@ void xosera_demo()
         }
         draw_ball(x, y, true);
     }
+    readchar();
+
+    // restore Xosera registers
+    xreg_setw(PB_GFX_CTRL, old_pb_gfx_ctrl);
+    xreg_setw(PB_LINE_LEN, old_pb_line_len);
+    xreg_setw(PB_DISP_ADDR, old_pb_disp_addr);
+    xreg_setw(PA_TILE_CTRL, old_pa_tile_ctrl);
+    xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
+    xreg_setw(PA_LINE_LEN, old_pa_line_len);
+    xreg_setw(PA_DISP_ADDR, old_pa_disp_addr);
+
+    restore_palette();
+
+    remove_intr();
 }

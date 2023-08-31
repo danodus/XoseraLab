@@ -82,20 +82,19 @@ void main()
 
     xosera_init(0);
 
-    xreg_setw(PA_DISP_ADDR, 0x0000);
-    xreg_setw(PA_LINE_ADDR, 0x0000);
+    uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, WIDTH);
 
-    xreg_setw(VID_RIGHT, 640);    
-
     // Set to tiled 4-bpp + Hx2 + Vx2
+    uint16_t old_pa_gfx_ctrl = xreg_getw(PA_GFX_CTRL);
     xreg_setw(PA_GFX_CTRL, 0x0015);
 
-    // blank PB
-    xreg_setw(PB_GFX_CTRL, 0x0080);
-
     // tile height to 8
+    uint16_t old_pa_tile_ctrl = xreg_getw(PA_TILE_CTRL);
     xreg_setw(PA_TILE_CTRL, 0x0007);
+
+    uint16_t old_pointer_h = xreg_getw(POINTER_H);
+    uint16_t old_pointer_v = xreg_getw(POINTER_V);
 
     xm_setw(WR_XADDR, XR_TILE_ADDR);
     for (size_t i = 0; i < 4096; ++i)
@@ -169,4 +168,12 @@ void main()
             }
         }
     }
+
+    // restore Xosera states
+
+    xreg_setw(POINTER_V, old_pointer_v);
+    xreg_setw(POINTER_H, old_pointer_h);
+    xreg_setw(PA_TILE_CTRL, old_pa_tile_ctrl);
+    xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
+    xreg_setw(PA_LINE_LEN, old_pa_line_len);
 }
