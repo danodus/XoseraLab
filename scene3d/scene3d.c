@@ -83,20 +83,16 @@ void set_palette(float value)
 
 void save_palette()
 {
+    xmem_getw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 256; i++)
-    {
-        xm_setw(RD_XADDR, XR_COLOR_ADDR | i);
-        old_palette[i] = xm_getw(XDATA); 
-    }
+        old_palette[i] = xmem_getw_next_wait();
 }
 
 void restore_palette()
 {
+    xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 256; i++)
-    {
-        xm_setw(WR_XADDR, XR_COLOR_ADDR | i);
-        xm_setw(XDATA, old_palette[i]);        // set palette data
-    }
+        xmem_setw_next(old_palette[i]);        // set palette data
 }
 
 void xosera_demo()

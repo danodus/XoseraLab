@@ -177,11 +177,9 @@ void wait_frame()
 
 void save_palette()
 {
+    xmem_getw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 512; i++)
-    {
-        xm_setw(RD_XADDR, XR_COLOR_ADDR | i);
-        old_palette[i] = xm_getw(XDATA); 
-    }
+        old_palette[i] = xmem_getw_next_wait();
 }
 
 void restore_palette()
