@@ -76,6 +76,12 @@ void draw_pixel(int x, int y, bool is_visible)
     xm_setw(DATA, is_visible ? 0x0001 : 0x0000);
 }
 
+void update_pointer(int x, int y)
+{
+    xreg_setw(POINTER_H, x + 155);
+    xreg_setw(POINTER_V, 0xF000 | y); 
+}
+
 void main()
 {
     init_io();
@@ -113,6 +119,9 @@ void main()
 
     int  x = 0, y = 0;
     bool is_running = true;
+
+    update_pointer(x, y);
+
     while (is_running)
     {
         io_event_t io_event;
@@ -134,8 +143,7 @@ void main()
                 {
                     draw_pixel(x >> 4, y >> 4, io_event.mstat & 0x1);
                 }
-                xreg_setw(POINTER_H, x + 155);
-                xreg_setw(POINTER_V, 0xF000 | y);    
+                update_pointer(x, y);
             }
             else if (io_event.type == IO_KEYDOWN)
             {
@@ -158,8 +166,7 @@ void main()
                         y=525;
                         break;
                 }
-                xreg_setw(POINTER_H, x + 155);
-                xreg_setw(POINTER_V, 0xF000 | y);                 
+                update_pointer(x, y);               
             }
             else if (io_event.type == IO_KEYUP)
             {
