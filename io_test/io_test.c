@@ -11,7 +11,7 @@ int main(int argc, char ** argv)
     print("\033[H\033[2J");
     println("I/O Test");
 
-    init_io();
+    init_io(true);
 
     while (1)
     {

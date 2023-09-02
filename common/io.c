@@ -1,17 +1,34 @@
 #include "io.h"
 
-#include <basicio.h>
+#include <machine.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
+static bool g_duart_detected = false;
+static CharDevice g_duart_device;
+
+bool check_char() {
+    if (g_duart_detected)
+        return mcCheckDevice(&g_duart_device);
+    else
+        return mcCheckchar();
+}
+
+char read_char() {
+    if (g_duart_detected)
+        return mcReadDevice(&g_duart_device);
+    else
+        return mcReadchar();
+}
+
 static unsigned char receive_byte(bool is_blocking, bool * is_byte_received)
 {
     if (is_blocking)
-        while (!checkchar());
+        while (!check_char());
 
-    if (is_blocking || checkchar()) {
-        unsigned char c = readchar();
+    if (is_blocking || check_char()) {
+        unsigned char c = read_char();
         if (is_byte_received)
             *is_byte_received = true;
         return c;
@@ -22,8 +39,41 @@ static unsigned char receive_byte(bool is_blocking, bool * is_byte_received)
     return 0;
 }
 
-void init_io()
+bool find_device(CharDevice *found_device, uint8_t device_type)
 {
+    bool ret = false;
+
+    uint16_t count = mcGetDeviceCount();
+    for (int i = 0; i < count; i++) {
+        CharDevice dev;
+        if (mcGetDevice(i, &dev)) {
+            // if the device has the good type
+            if (dev.device_type == device_type) {
+                *found_device = dev;
+                ret = true;
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+void init_io(bool use_port_b_if_available)
+{
+    // if the device support is available in the firmware, use the DUART
+    if (mcCheckDeviceSupport()) {
+        // find the DUART device for the given port
+        if (find_device(&g_duart_device, use_port_b_if_available ? 0x03 : 0x02)) {
+            g_duart_detected = true;
+        } else {
+            if (use_port_b_if_available) {
+                // fallback to port A of the DUART if possible
+                if (find_device(&g_duart_device, 0x02))
+                    g_duart_detected = true;
+            }
+        }
+    }
+
     // clear queued events
     bool is_byte_received;
     do

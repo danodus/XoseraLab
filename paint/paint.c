@@ -84,7 +84,7 @@ void update_pointer(int x, int y)
 
 void main()
 {
-    init_io();
+    init_io(true);
 
     xosera_init(0);
 
