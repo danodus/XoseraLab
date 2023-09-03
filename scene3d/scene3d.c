@@ -137,7 +137,7 @@ void xosera_demo()
     // Projection matrix
     mat4x4 mat_proj = matrix_make_projection(320, 200, 60.0f);
 
-    int  mouse_x = 0, mouse_y = 0;
+    //int  mouse_x = 0, mouse_y = 0;
 
     vec3d vec_camera = {FX(0.0f), FX(0.0f), FX(0.0f), FX(1.0f)};
 
