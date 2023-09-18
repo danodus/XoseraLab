@@ -468,6 +468,9 @@ void main()
     xosera_init(0);
     install_intr();
 
+    uint16_t old_vid_right = xreg_getw(VID_RIGHT);
+    xreg_setw(VID_RIGHT, 640 + 32);
+
     uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, screen_width / 4);
 
@@ -505,7 +508,11 @@ void main()
     //init_audio_sample(g_sin_data, sizeof(g_sin_data));
 
     int audio_speed = 500;
-    for (;;) {
+
+    while (checkchar())
+        readchar();
+
+    while (!checkchar()) {
 
         //wait_frame();
         
@@ -522,12 +529,15 @@ void main()
         update(elapsed_time);
         update_copper();
     }
+    readchar();
 
     // disable Copper
     xreg_setw(COPP_CTRL, 0x0000);
 
     xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
     xreg_setw(PA_LINE_LEN, old_pa_line_len);
+
+    xreg_setw(VID_RIGHT, old_vid_right);
 
     remove_intr();
 }
