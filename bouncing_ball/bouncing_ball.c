@@ -300,6 +300,9 @@ void xosera_demo()
     int sx = 1;
     int sy = 1;
 
+    while(checkchar())
+        readchar();
+
     while (!checkchar())
     {
         wait_frame();

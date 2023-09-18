@@ -44,6 +44,7 @@ extern fx32 distance;
 extern fx32 track_curvature;
 extern fx32 curvature;
 
+/*
 static int8_t g_sin_data[256] = {
     0,           // 0
     3,           // 1
@@ -302,6 +303,7 @@ static int8_t g_sin_data[256] = {
     -6,          // 254
     -4,          // 255
 };
+*/
 
 static void init_audio_sample(int8_t * samp, int bytesize)
 {
@@ -422,45 +424,39 @@ void wait_frame()
         ;
 }
 
+inline void set_copper1(uint16_t i0) {
+    xmem_setw_next(i0);
+}
+
+inline void set_copper2(uint16_t i0, uint16_t i1) {
+    xmem_setw_next(i0);
+    xmem_setw_next(i1);
+}
+
 void update_copper()
 {
     wait_frame();
     // uint16_t addr = (screen_width / 2) * (screen_height / 2);
     uint32_t addr = screen_width;
-    xm_setw(WR_XADDR, XR_COPPER_ADDR);
+    xmem_setw_next_addr(XR_COPPER_ADDR);
     for (int y = 0; y < screen_height / 2; ++y)
     {
         fx32 middle_point = MUL(curvature, perspective_table[y]);
 
         int offset = INT(MUL(middle_point, FXI(screen_width)));
 
-        uint32_t   i  = COP_WAIT_V(screen_height + y * 2);
-        uint16_t * wp = (uint16_t *)&i;
-        xm_setw(XDATA, *wp++);
-        xm_setw(XDATA, *wp);
+        set_copper1(COP_VPOS(screen_height + y * 2));
 
         uint32_t ao = addr - offset;
-        i           = COP_MOVER((uint16_t)(ao / 4), PA_LINE_ADDR);
-        wp          = (uint16_t *)&i;
-        xm_setw(XDATA, *wp++);
-        xm_setw(XDATA, *wp);
+        set_copper2(COP_MOVER((uint16_t)(ao / 4), PA_LINE_ADDR));
         addr += terrain_width;
 
-        i  = COP_MOVER((2 * (ao & 0x3)) << 8, PA_HV_SCROLL);
-        wp = (uint16_t *)&i;
-        xm_setw(XDATA, *wp++);
-        xm_setw(XDATA, *wp);
+        set_copper2(COP_MOVER((2 * (ao & 0x3)) << 8, PA_HV_SCROLL));
 
         uint16_t clip_color = clip_table[y][INT(distance) % 4];
-        i                   = COP_MOVEP(clip_color, WHITE);
-        wp                  = (uint16_t *)&i;
-        xm_setw(XDATA, *wp++);
-        xm_setw(XDATA, *wp);
+        set_copper2(COP_MOVI(clip_color, XR_COLOR_ADDR + WHITE));
     }
-    uint32_t   i  = COP_END();
-    uint16_t * wp = (uint16_t *)&i;
-    xm_setw(XDATA, *wp++);
-    xm_setw(XDATA, *wp);
+    set_copper1(COP_END());
 }
 
 void main()
@@ -506,14 +502,14 @@ void main()
 
     // uint16_t t1         = xm_getw(TIMER);
 
-    init_audio_sample(g_sin_data, sizeof(g_sin_data));
+    //init_audio_sample(g_sin_data, sizeof(g_sin_data));
 
     int audio_speed = 500;
     for (;;) {
 
-        wait_frame();
+        //wait_frame();
         
-        play_audio_sample(sizeof(g_sin_data), audio_speed);    
+        //play_audio_sample(sizeof(g_sin_data), audio_speed);    
         audio_speed += 50;
         if (audio_speed > 1000)
             audio_speed = 500;

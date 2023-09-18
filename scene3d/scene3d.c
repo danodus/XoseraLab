@@ -48,10 +48,10 @@ const uint16_t defpal[16] = {
 uint16_t pal[256][3];
 uint16_t old_palette[256];
 
-const uint32_t copper_list[] = {COP_WAIT_V(40),
+const uint16_t copper_list[] = {COP_VPOS(40),
                                 COP_MOVER(0x0065, PA_GFX_CTRL),        // Set to 8-bpp + Hx2 + Vx2
-                                COP_WAIT_V(440),
-                                COP_MOVER(0x00D5, PA_GFX_CTRL),        // Set to blank
+                                COP_VPOS(440),
+                                COP_MOVER(0x00E5, PA_GFX_CTRL),        // Set to blank
                                 COP_END()};
 
 model_t * cube_model;
@@ -106,12 +106,10 @@ void xosera_demo()
 
     install_intr();
 
-    xm_setw(WR_XADDR, XR_COPPER_ADDR);
-    uint16_t * wp = (uint16_t *)copper_list;
-    for (uint8_t i = 0; i < sizeof(copper_list) / sizeof(uint32_t); i++)
+    xmem_setw_next_addr(XR_COPPER_ADDR);
+    for (uint8_t i = 0; i < sizeof(copper_list) / sizeof(copper_list[0]); i++)
     {
-        xm_setw(XDATA, *wp++);
-        xm_setw(XDATA, *wp++);
+        xmem_setw_next(copper_list[i]);
     }
 
     uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
@@ -140,6 +138,9 @@ void xosera_demo()
     //int  mouse_x = 0, mouse_y = 0;
 
     vec3d vec_camera = {FX(0.0f), FX(0.0f), FX(0.0f), FX(1.0f)};
+
+    while(checkchar())
+        readchar();
 
     while (!checkchar())
     {
