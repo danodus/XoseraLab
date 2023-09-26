@@ -51,7 +51,7 @@ def convert_map(name):
     root = tree.getroot()
     layer = root.findall("./layer")[0]
     print("#define %s_WIDTH %s" % (name.upper(), layer.attrib['width']))
-    print("#define %s_HEIGHT = %s" % (name.upper(), layer.attrib['height']))
+    print("#define %s_HEIGHT %s" % (name.upper(), layer.attrib['height']))
 
     print("uint8_t %s_data[] = {" % name)
     print(layer.findall("./data")[0].text)

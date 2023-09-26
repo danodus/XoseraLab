@@ -37,22 +37,24 @@ extern volatile uint32_t XFrameCount;
 
 uint16_t old_palette[512];
 
-int x  = 0;
-int y  = 0;
-int sx = 0;
-int sy = 0;
+int player_x  = 0;
+int player_y  = 0;
+int player_sx = 0;
+int player_sy = 0;
+
+int map_x = 0;
+int map_y = 0;
 
 bool is_running = true;
 
-static void draw_map() {
+static void draw_map(int map_x, int map_y) {
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, START_A);
-    uint8_t *p = map0_data;
     for (int y = 0; y < HEIGHT_A; ++y) {
         for (int x = 0; x < WIDTH_A; ++x) {
-            uint16_t v = *p - 1;
+            int addr = (y + map_y / 8) * MAP0_WIDTH + x + map_x / 8;
+            uint16_t v = map0_data[addr] - 1;
             xm_setw(DATA, v);
-            p++;
         }
     }
 }
@@ -110,35 +112,35 @@ static void handle_event(io_event_t *io_event) {
     if (io_event->type == IO_KEYDOWN) {
         switch (io_event->scancode) {
             case IO_SCANCODE_UP:
-                sy = -1;
+                player_sy = -1;
                 break;
             case IO_SCANCODE_DOWN:
-                sy = 1;
+                player_sy = 1;
                 break;
             case IO_SCANCODE_LEFT:
-                sx = -1;
+                player_sx = -1;
                 break;
             case IO_SCANCODE_RIGHT:
-                sx = 1;
+                player_sx = 1;
                 break;
         }
     } else if (io_event->type == IO_KEYUP) {
         switch (io_event->scancode) {
             case IO_SCANCODE_UP:
-                if (sy == -1)
-                    sy = 0;
+                if (player_sy == -1)
+                    player_sy = 0;
                 break;
             case IO_SCANCODE_DOWN:
-                if (sy == 1)
-                    sy = 0;
+                if (player_sy == 1)
+                    player_sy = 0;
                 break;
             case IO_SCANCODE_LEFT:
-                if (sx == -1)
-                    sx = 0;
+                if (player_sx == -1)
+                    player_sx = 0;
                 break;
             case IO_SCANCODE_RIGHT:
-                if (sx == 1)
-                    sx = 0;
+                if (player_sx == 1)
+                    player_sx = 0;
                 break;
             case IO_SCANCODE_ESC:
                 is_running = false;
@@ -236,25 +238,54 @@ void xosera_main() {
 
     init_draw_ball();
 
-    draw_map();
+    int old_map_x = -1, old_map_y = -1;
 
     while (is_running) {
         wait_frame();
-        draw_bob(x, y, -1);
 
-        x += sx;
-        y += sy;
+        if (map_x != old_map_x || map_y != old_map_y)
+            draw_map(map_x, map_y);
+        old_map_x = map_x;
+        old_map_y = map_y;
 
-        if (x < 0)
-            x = 0;
-        if (y < 0)
-            y = 0;
-        if (x > WIDTH_B - 16)
-            x = WIDTH_B - 16;
-        if (y > HEIGHT_B - 16)
-            y = HEIGHT_B - 16;
+        draw_bob(player_x - map_x, player_y - map_y, -1);
 
-        draw_bob(x, y, 1);
+        player_x += player_sx;
+        player_y += player_sy;
+
+        if (player_x - map_x < 0) {
+            if (map_x > 0) {
+                map_x--;
+            } else {
+                player_x = 0;
+            }
+        }
+
+        if (player_y - map_y < 0) {
+            if (map_y > 0) {
+                map_y--;
+            } else {
+                player_y = 0;
+            }
+        }
+
+        if (player_x - map_x > WIDTH_B - 16) {
+            if (map_x < MAP0_WIDTH * 8 - WIDTH_B) {
+                map_x++;
+            } else {
+                player_x = MAP0_WIDTH * 8 - 16;
+            }
+        }
+
+        if (player_y - map_y > HEIGHT_B - 16) {
+            if (map_y < MAP0_HEIGHT * 8 - HEIGHT_B) {
+                map_y++;
+            } else {
+                player_y = MAP0_HEIGHT * 8 - 16;
+            }
+        }
+
+        draw_bob(player_x - map_x, player_y - map_y, 1);
     }
 
     // restore Xosera registers
