@@ -468,9 +468,6 @@ void main()
     xosera_init(0);
     install_intr();
 
-    uint16_t old_vid_right = xreg_getw(VID_RIGHT);
-    xreg_setw(VID_RIGHT, 640 + 32);
-
     uint16_t old_pa_line_len = xreg_getw(PA_LINE_LEN);
     xreg_setw(PA_LINE_LEN, screen_width / 4);
 
@@ -536,8 +533,6 @@ void main()
 
     xreg_setw(PA_GFX_CTRL, old_pa_gfx_ctrl);
     xreg_setw(PA_LINE_LEN, old_pa_line_len);
-
-    xreg_setw(VID_RIGHT, old_vid_right);
 
     remove_intr();
 }
