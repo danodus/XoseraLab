@@ -2,8 +2,18 @@ import sys
 import xml.etree.ElementTree as ET
 from PIL import Image
 
+def convert_tile(rgb_im, palette, tile_x, tile_y, tile_size):
+    s = ""
+    for y in range(tile_size):
+        for x in range(tile_size):
+            rgb = rgb_im.getpixel((tile_x * tile_size + x, tile_y * tile_size + y))
+            index = palette.index(rgb)
+            s = s + "%x" % index
+            if x % 4 == 3:
+                print("0x" + s + ",")
+                s = ""
 
-def convert_png(name, is_pf_b):
+def convert_png(name, is_pf_b, tile_size):
     im = Image.open("%s.png" % name)
     rgb_im = im.convert('RGB')
     width, height = rgb_im.size
@@ -17,7 +27,7 @@ def convert_png(name, is_pf_b):
                 palette.append(rgb)
 
     if len(palette) > 16:
-        print("Too many colors (%d)", len(palette))
+        print("Too many colors (%d)" % len(palette))
         sys.exit(1)
 
     print("uint16_t %s_palette[16] = {" % name)
@@ -35,15 +45,11 @@ def convert_png(name, is_pf_b):
     print("};")
 
     print("uint16_t %s_bitmap[] = {" % name)
-    s = ""
-    for y in range(height):
-        for x in range(width):
-            rgb = rgb_im.getpixel((x, y))
-            index = palette.index(rgb)
-            s = s + "%x" % index
-            if x % 4 == 3:
-                print("0x" + s + ",")
-                s = ""
+
+    for tile_y in range(height // tile_size):
+        for tile_x in range(width // tile_size):
+            convert_tile(rgb_im, palette, tile_x, tile_y, tile_size)
+
     print("};")
 
 def convert_map(name):
@@ -61,8 +67,8 @@ print("#ifndef ASSETS_H")
 print("#define ASSETS_H")
 print("#include <stdint.h>")
 
-convert_png("tiles", False)
-convert_png("bobs", True)
+convert_png("tiles", False, 8)
+convert_png("bobs", True, 16)
 convert_map("map0")
 
 print("#endif // ASSETS_H")

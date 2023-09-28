@@ -23,7 +23,8 @@ extern volatile uint32_t XFrameCount;
 #define XR_TILE_ADDR 0x4000
 
 #define WIDTH 640
-#define NB_COLS (WIDTH / 8)
+
+#define TILES_WIDTH 16
 
 #define START_A     0
 #define WIDTH_A     41
@@ -47,18 +48,30 @@ int map_y = 0;
 
 bool is_running = true;
 
+inline uint16_t get_map_value(int x, int y) {
+    uint16_t addr = ((y / 2) * MAP0_WIDTH + (x / 2));
+
+    uint16_t index_small = map0_data[addr] - 1;
+
+    uint16_t y_small = index_small / TILES_WIDTH;
+    uint16_t x_small = index_small % TILES_WIDTH;
+    uint16_t y_large = y_small * 2 + ((y & 1) ? 1 : 0);
+    uint16_t x_large = x_small * 2 + ((x & 1) ? 1 : 0);
+
+    return y_large * TILES_WIDTH * 2 + x_large;
+}
+
 static void draw_map(int map_x, int map_y) {
     xv_prep();
+    map_x /= 8;
+    map_y /= 8;
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, START_A);
-    int addr = (map_y / 8) * MAP0_WIDTH + map_x / 8;
     for (int y = 0; y < HEIGHT_A; ++y) {
         for (int x = 0; x < WIDTH_A; ++x) {
-            uint16_t v = map0_data[addr] - 1;
+            uint16_t v = get_map_value(map_x + x, map_y + y);
             xm_setbl(DATA, v);
-            addr++;
         }
-        addr += MAP0_WIDTH - WIDTH_A;
     }
 }
 
@@ -341,7 +354,7 @@ void xosera_main() {
             }
         }
 
-        draw_bob(player_x - map_x, player_y - map_y, 1);
+        draw_bob(player_x - map_x, player_y - map_y, 0);
     }
 
     // restore Xosera registers
