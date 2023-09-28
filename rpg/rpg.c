@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <basicio.h>
 #include <machine.h>
 
+#define XV_PREP_REQUIRED
 #include <xosera_m68k_api.h>
 #include <io.h>
 
@@ -26,8 +26,8 @@ extern volatile uint32_t XFrameCount;
 #define NB_COLS (WIDTH / 8)
 
 #define START_A     0
-#define WIDTH_A     40
-#define HEIGHT_A    30
+#define WIDTH_A     41
+#define HEIGHT_A    31
 
 #define START_B (START_A + (WIDTH_A * HEIGHT_A))
 #define WIDTH_B 320
@@ -48,26 +48,33 @@ int map_y = 0;
 bool is_running = true;
 
 static void draw_map(int map_x, int map_y) {
+    xv_prep();
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, START_A);
+    int addr = (map_y / 8) * MAP0_WIDTH + map_x / 8;
     for (int y = 0; y < HEIGHT_A; ++y) {
         for (int x = 0; x < WIDTH_A; ++x) {
-            int addr = (y + map_y / 8) * MAP0_WIDTH + x + map_x / 8;
             uint16_t v = map0_data[addr] - 1;
-            xm_setw(DATA, v);
+            xm_setbl(DATA, v);
+            addr++;
         }
+        addr += MAP0_WIDTH - WIDTH_A;
     }
 }
 
 static void init_bobs() {
-        xm_setw(WR_INCR, 0x0001);
-        xm_setw(WR_ADDR, START_BOBS);
+    xv_prep();
 
-        for (size_t i = 0; i < sizeof(bobs_bitmap) / sizeof(uint16_t); ++i)
-            xm_setw(DATA, bobs_bitmap[i]);
+    xm_setw(WR_INCR, 0x0001);
+    xm_setw(WR_ADDR, START_BOBS);
+
+    for (size_t i = 0; i < sizeof(bobs_bitmap) / sizeof(uint16_t); ++i)
+        xm_setw(DATA, bobs_bitmap[i]);
 }
 
 static void wait_blit_ready() {
+    xv_prep();
+
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
@@ -75,13 +82,17 @@ static void wait_blit_ready() {
 }
 
 static void wait_blit_done() {
+    xv_prep();
+
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
     } while ((v & 0x2000) != 0x0000);
 }
 
-static void init_draw_ball() {
+static void init_draw_bob() {
+    xv_prep();
+
     xreg_setw(BLIT_MOD_S, 0x0000);
     xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4);
     xreg_setw(BLIT_SHIFT, 0xFF00);
@@ -89,6 +100,8 @@ static void init_draw_ball() {
 }
 
 static void draw_bob(uint16_t x, uint16_t y, int bob_index) {
+    xv_prep();
+
     uint16_t shift = x & 0x3;
     if (bob_index >= 0) {
         xreg_setw(BLIT_SRC_S, START_BOBS + (bob_index * 4 * 16));
@@ -142,6 +155,18 @@ static void handle_event(io_event_t *io_event) {
                 if (player_sx == 1)
                     player_sx = 0;
                 break;
+            case IO_SCANCODE_A:
+                map_x--;
+                break;
+            case IO_SCANCODE_D:
+                map_x++;
+                break;
+            case IO_SCANCODE_W:
+                map_y--;
+                break;
+            case IO_SCANCODE_S:
+                map_y++;
+                break;
             case IO_SCANCODE_ESC:
                 is_running = false;
                 break;
@@ -159,12 +184,16 @@ static void wait_frame() {
 }
 
 static void save_palette() {
+    xv_prep();
+
     xmem_getw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 512; i++)
         old_palette[i] = xmem_getw_next_wait();
 }
 
 static void restore_palette() {
+    xv_prep();
+
     xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 512; i++)
         xmem_setw_next(old_palette[i]);        // set palette data
@@ -172,6 +201,8 @@ static void restore_palette() {
 
 // set first 16 colors to palette
 static void set_palette() {
+    xv_prep();
+
     // Playfield A
     xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 16; i++)
@@ -183,7 +214,35 @@ static void set_palette() {
         xmem_setw_next(bobs_palette[i]);
 }
 
+// clear playfield A
+void clear_pfa() {
+    xv_prep();
+    xm_setw(WR_INCR, 0x0001);
+    xm_setw(WR_ADDR, START_A);
+    for (int y = 0; y < HEIGHT_A; ++y) {
+        for (int x = 0; x < WIDTH_A; ++x) {
+            xm_setw(DATA, 0);
+        }
+    } 
+}
+
+// clear playfield B
+void clear_pfb() {
+    xv_prep();
+
+    xreg_setw(BLIT_CTRL, 0x0001);
+    xreg_setw(BLIT_SRC_S, 0x0000);
+    xreg_setw(BLIT_MOD_D, 0x0000);
+    xreg_setw(BLIT_DST_D, START_B);
+    xreg_setw(BLIT_SHIFT, 0xFF00);
+    xreg_setw(BLIT_LINES, HEIGHT_B - 1);
+    xreg_setw(BLIT_WORDS, WIDTH_B / 4 - 1);
+    wait_blit_done();    
+}
+
 void xosera_main() {
+    xv_prep();
+
     init_io(true);
 
     xosera_init(0);
@@ -225,28 +284,25 @@ void xosera_main() {
     uint16_t old_pb_gfx_ctrl = xreg_getw(PB_GFX_CTRL);
     xreg_setw(PB_GFX_CTRL, 0x0055);
 
-    // clear playfield B
+    clear_pfa();
+    clear_pfb();
 
-    xreg_setw(BLIT_CTRL, 0x0001);
-    xreg_setw(BLIT_SRC_S, 0x0000);
-    xreg_setw(BLIT_MOD_D, 0x0000);
-    xreg_setw(BLIT_DST_D, START_B);
-    xreg_setw(BLIT_SHIFT, 0xFF00);
-    xreg_setw(BLIT_LINES, HEIGHT_B - 1);
-    xreg_setw(BLIT_WORDS, WIDTH_B / 4 - 1);
-    wait_blit_done();
+    init_draw_bob();
 
-    init_draw_ball();
-
-    int old_map_x = -1, old_map_y = -1;
+    int old_map_x = -8, old_map_y = -8;
 
     while (is_running) {
         wait_frame();
 
-        if (map_x != old_map_x || map_y != old_map_y)
+        uint16_t fine_x = map_x % 8;
+        uint16_t fine_y = map_y % 8;
+        xreg_setw(PA_HV_SCROLL, (fine_x << 9) | (fine_y << 2));
+
+        if (map_x / 8 != old_map_x / 8 || map_y / 8 != old_map_y / 8)
             draw_map(map_x, map_y);
         old_map_x = map_x;
         old_map_y = map_y;
+
 
         draw_bob(player_x - map_x, player_y - map_y, -1);
 
