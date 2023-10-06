@@ -309,7 +309,8 @@ void xosera_main() {
 
         uint16_t fine_x = map_x % 8;
         uint16_t fine_y = map_y % 8;
-        xreg_setw(PA_HV_SCROLL, (fine_x << 9) | (fine_y << 2));
+        xreg_setw(PA_H_SCROLL, fine_x << 1);
+        xreg_setw(PA_V_SCROLL, fine_y << 1);
 
         if (map_x / 8 != old_map_x / 8 || map_y / 8 != old_map_y / 8)
             draw_map(map_x, map_y);

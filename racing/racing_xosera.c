@@ -451,7 +451,7 @@ void update_copper()
         set_copper2(COP_MOVER((uint16_t)(ao / 4), PA_LINE_ADDR));
         addr += terrain_width;
 
-        set_copper2(COP_MOVER((2 * (ao & 0x3)) << 8, PA_HV_SCROLL));
+        set_copper2(COP_MOVER((2 * (ao & 0x3)), PA_H_SCROLL));
 
         uint16_t clip_color = clip_table[y][INT(distance) % 4];
         set_copper2(COP_MOVI(clip_color, XR_COLOR_ADDR + WHITE));
