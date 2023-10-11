@@ -11,8 +11,17 @@
 
 #include <xosera_m68k_api.h>
 
+#define GLITCHY 1
+
 static uint16_t g_audio_vaddr[] = {0x8000, 0x9000, 0xA000, 0xB000, 0xC000, 0xD000};
+#if GLITCHY
 static int g_nb_cycles[] = {1,2,1,2,1,2};
+static int g_audio_speed_inc = 0;
+#else
+static int g_nb_cycles[] = {1,1,1,1,1,1};
+static int g_audio_speed_inc = 10;
+#endif
+
 #define NB_VADDR (sizeof(g_audio_vaddr) / sizeof(g_audio_vaddr[0]))
 
 static int8_t g_sin_data[256] = {
@@ -328,20 +337,14 @@ void main(void)
         readchar();
 
     int index = 0;
-    int counter = 0;
     int audio_speed = 500;
-    int audio_speed_inc = 10;
     while (!checkchar())
     {
-        if (counter > 20) {
-            play_audio_sample(index, sizeof(g_sin_data), audio_speed);
-            index = (index + 1) % NB_VADDR;
-            audio_speed += audio_speed_inc;
-            if (audio_speed < 500 || audio_speed > 1000)
-                audio_speed_inc = -audio_speed_inc;
-            counter = 0;
-        }
-        counter++;
+        play_audio_sample(index, sizeof(g_sin_data), audio_speed);
+        index = (index + 1) % NB_VADDR;
+        audio_speed += g_audio_speed_inc;
+        if (audio_speed < 500 || audio_speed > 1000)
+            g_audio_speed_inc = -g_audio_speed_inc;
     }
     readchar();
 }
