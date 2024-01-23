@@ -11,7 +11,10 @@ int main(int argc, char ** argv)
     print("\033[H\033[2J");
     println("I/O Test");
 
-    init_io(true);
+    if (!init_io(true)) {
+        println("I/O initialization failed");
+        return 1;
+    }
 
     while (1)
     {

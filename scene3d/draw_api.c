@@ -40,6 +40,7 @@ static uint16_t g_cur_draw_buffer_addr;
 
 void xd_wait_done()
 {
+    xv_prep();
     uint8_t sys_ctrl;
     do
     {
@@ -56,6 +57,7 @@ void xd_wait_frame()
 
 static void draw_pixel(int x, int y, int color)
 {
+    xv_prep();
     uint16_t ux = x;
     uint16_t uy = y;
     uint8_t  uc = color;
@@ -70,6 +72,7 @@ static void draw_pixel(int x, int y, int color)
 }
 
 void wait_blit_ready() {
+    xv_prep();
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
@@ -77,6 +80,7 @@ void wait_blit_ready() {
 }
 
 void wait_blit_done() {
+    xv_prep();
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
@@ -94,6 +98,7 @@ void xd_init(int start_line, int width, int height, int bpp)
 
 void xd_init_swap()
 {
+    xv_prep();
     g_disp_buffer = 0;
 
     g_first_disp_buffer_addr  = g_start_line * g_width / 2;
@@ -107,6 +112,7 @@ void xd_init_swap()
 
 void xd_swap(bool is_vsync_enabled)
 {
+    xv_prep();
     xd_wait_done();
     if (is_vsync_enabled)
         xd_wait_frame();
@@ -152,6 +158,7 @@ uint16_t xd_swap_copper(bool is_vsync_enabled)
 
 void xd_clear()
 {
+    xv_prep();
     xreg_setw(BLIT_CTRL, 0x0001);
     xreg_setw(BLIT_SRC_S, 0x0000);
     xreg_setw(BLIT_MOD_D, 0x0000);
@@ -168,24 +175,28 @@ void xd_finish()
 
 void xd_draw_line(int x0, int y0, int x1, int y1, int color)
 {
+    xv_prep();
     sw_draw_line(x0, y0, x1, y1, color);
     xm_setbl(SYS_CTRL, 0x0F);
 }
 
 void xd_draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, int color)
 {
+    xv_prep();
     sw_draw_triangle(x0, y0, x1, y1, x2, y2, color);
     xm_setbl(SYS_CTRL, 0x0F);
 }
 
 void xd_draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, int color)
 {
+    xv_prep();
     sw_draw_filled_triangle(x0, y0, x1, y1, x2, y2, color);
     xm_setbl(SYS_CTRL, 0x0F);
 }
 
 void xd_draw_filled_rectangle(int x0, int y0, int x1, int y1, int color)
 {
+    xv_prep();
     sw_draw_filled_rectangle(x0, y0, x1, y1, color);
     xm_setbl(SYS_CTRL, 0x0F);
 }

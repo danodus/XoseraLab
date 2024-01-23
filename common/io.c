@@ -5,6 +5,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define CMD_MODE_SET  0x10
+#define CMD_ACK       0xff
+
+#define MODE_PS2      0x80
+
 static bool g_duart_detected = false;
 static CharDevice g_duart_device;
 
@@ -39,6 +44,13 @@ static unsigned char receive_byte(bool is_blocking, bool * is_byte_received)
     return 0;
 }
 
+void send_byte(unsigned char c) {
+    if (g_duart_detected)
+        mcSendDevice(c, &g_duart_device);
+    else
+        mcPrintchar(c);
+}
+
 bool find_device(CharDevice *found_device, uint8_t device_type)
 {
     bool ret = false;
@@ -58,7 +70,7 @@ bool find_device(CharDevice *found_device, uint8_t device_type)
     return ret;
 }
 
-void init_io(bool use_port_b_if_available)
+bool init_io(bool use_port_b_if_available)
 {
     // if the device support is available in the firmware, use the DUART
     if (mcCheckDeviceSupport()) {
@@ -80,6 +92,18 @@ void init_io(bool use_port_b_if_available)
     {
         receive_byte(false, &is_byte_received);
     } while (is_byte_received);
+
+    // enable PS/2 mode
+    send_byte(CMD_MODE_SET);
+    unsigned char c = receive_byte(true, NULL);
+    if (c != CMD_ACK)
+        return false;
+    send_byte(MODE_PS2);
+    c = receive_byte(true, NULL);
+    if (c != CMD_ACK)
+        return false;
+    
+    return true;    
 }
 
 bool receive_event(io_event_t * io_event)

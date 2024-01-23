@@ -34,7 +34,7 @@ typedef struct
 } io_event_t;
 
 
-void init_io(bool use_port_b_if_available);
+bool init_io(bool use_port_b_if_available);
 bool receive_event(io_event_t * io_event);
 
 #endif

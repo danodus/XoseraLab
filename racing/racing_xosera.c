@@ -307,6 +307,7 @@ static int8_t g_sin_data[256] = {
 
 static void init_audio_sample(int8_t * samp, int bytesize)
 {
+    xv_prep();
     uint16_t audio_vaddr = 0x8000;
     xm_setw(SYS_CTRL, 0x000F);        // make sure no nibbles masked
 
@@ -323,6 +324,7 @@ static void init_audio_sample(int8_t * samp, int bytesize)
 
 static void play_audio_sample(int bytesize, int speed)
 {
+    xv_prep();
     uint16_t audio_vaddr = 0x8000;
     xreg_setw(AUD0_VOL, 0x0000);           // set volume to 0%
     xreg_setw(AUD0_PERIOD, 0x0000);        // 1000 clocks per each sample byte
@@ -344,6 +346,7 @@ void update(fx32 elapsed_time);
 
 void draw_pixel(int x, int y, int color)
 {
+    xv_prep();
     uint16_t ux = x;
     uint16_t uy = y;
     uint8_t  uc = color << 4 | color;
@@ -425,16 +428,19 @@ void wait_frame()
 }
 
 inline void set_copper1(uint16_t i0) {
+    xv_prep();
     xmem_setw_next(i0);
 }
 
 inline void set_copper2(uint16_t i0, uint16_t i1) {
+    xv_prep();
     xmem_setw_next(i0);
     xmem_setw_next(i1);
 }
 
 void update_copper()
 {
+    xv_prep();
     wait_frame();
     // uint16_t addr = (screen_width / 2) * (screen_height / 2);
     uint32_t addr = screen_width;
@@ -461,6 +467,7 @@ void update_copper()
 
 void main()
 {
+    xv_prep();
 #if ENABLE_IO
     init_io();
 #endif

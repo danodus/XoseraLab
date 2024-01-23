@@ -58,6 +58,7 @@ uint16_t tile_mem[] = {
 
 void clear()
 {
+    xv_prep();
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, 0x0000);
 
@@ -71,6 +72,7 @@ void clear()
 
 void draw_pixel(int x, int y, bool is_visible)
 {
+    xv_prep();
     mem[x][y] = is_visible ? 1 : 0;
     xm_setw(WR_ADDR, y * WIDTH + x);
     xm_setw(DATA, is_visible ? 0x0001 : 0x0000);
@@ -78,12 +80,15 @@ void draw_pixel(int x, int y, bool is_visible)
 
 void update_pointer(int x, int y)
 {
+    xv_prep();
     xreg_setw(POINTER_H, x + 155);
     xreg_setw(POINTER_V, 0xF000 | y); 
 }
 
 void main()
 {
+    xv_prep();
+
     init_io(true);
 
     xosera_init(0);

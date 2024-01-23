@@ -110,6 +110,7 @@ uint8_t map[80*30] = {
 uint16_t old_palette[512];
 
 void draw_background() {
+    xv_prep();
     xm_setw(WR_INCR, 0x0001);
     xm_setw(WR_ADDR, START_A);
     for (int y = 0; y < HEIGHT_A; ++y) {
@@ -120,14 +121,16 @@ void draw_background() {
 }
 
 void init_bobs() {
-        xm_setw(WR_INCR, 0x0001);
-        xm_setw(WR_ADDR, START_BOBS);
+    xv_prep();
+    xm_setw(WR_INCR, 0x0001);
+    xm_setw(WR_ADDR, START_BOBS);
 
-        for (size_t i = 0; i < sizeof(ball_bob) / sizeof(uint16_t); ++i)
-            xm_setw(DATA, ball_bob[i]);
+    for (size_t i = 0; i < sizeof(ball_bob) / sizeof(uint16_t); ++i)
+        xm_setw(DATA, ball_bob[i]);
 }
 
 void wait_blit_ready() {
+    xv_prep();
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
@@ -135,6 +138,7 @@ void wait_blit_ready() {
 }
 
 void wait_blit_done() {
+    xv_prep();
     uint16_t v;
     do {
       v = xm_getw(SYS_CTRL);
@@ -142,6 +146,7 @@ void wait_blit_done() {
 }
 
 void init_draw_ball() {
+    xv_prep();
     xreg_setw(BLIT_MOD_S, 0x0000);
     xreg_setw(BLIT_MOD_D, WIDTH_B / 4 - 4);
     xreg_setw(BLIT_SHIFT, 0xFF00);
@@ -149,6 +154,7 @@ void init_draw_ball() {
 }
 
 void draw_ball(uint16_t x, uint16_t y, bool visible) {
+    xv_prep();
     uint16_t shift = x & 0x3;
     if (visible) {
         xreg_setw(BLIT_SRC_S, START_BOBS);
@@ -170,6 +176,7 @@ void draw_ball(uint16_t x, uint16_t y, bool visible) {
 
 void wait_frame()
 {
+    xv_prep();
     uint32_t f = XFrameCount;
     while (XFrameCount == f)
         ;
@@ -177,6 +184,7 @@ void wait_frame()
 
 void save_palette()
 {
+    xv_prep();
     xmem_getw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 512; i++)
         old_palette[i] = xmem_getw_next_wait();
@@ -184,6 +192,7 @@ void save_palette()
 
 void restore_palette()
 {
+    xv_prep();
     xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 512; i++)
         xmem_setw_next(old_palette[i]);        // set palette data
@@ -192,6 +201,7 @@ void restore_palette()
 // set first 16 colors to default VGA colors
 static void set_default_colors()
 {
+    xv_prep();
     static const uint16_t def_colors16_a[16] = {0x0000,         // black
                                               0x000a,         // blue
                                               0x00a0,         // green
@@ -239,7 +249,7 @@ static void set_default_colors()
 
 void xosera_demo()
 {
-
+    xv_prep();
     xosera_init(0);
 
     install_intr();

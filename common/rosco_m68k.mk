@@ -18,7 +18,7 @@ SYSINCDIR?=$(ROSCO_M68K_DIR)/code/software/libs/build/include
 SYSLIBDIR?=$(ROSCO_M68K_DIR)/code/software/libs/build/lib
 DEFINES=-DROSCO_M68K
 CFLAGS=-std=c11 -ffreestanding -ffunction-sections -fdata-sections \
-    -Wall -Wextra -Werror -Wno-unused-function -pedantic -I$(SYSINCDIR) \
+    -Wall -Wextra -Wno-unused-function -pedantic -I$(SYSINCDIR) \
     -I$(XOSERA_M68K_API) -I../common \
     -mcpu=68010 -march=68010 -mtune=68010 $(DEFINES)
 GCC_LIBS=$(shell $(CC) --print-search-dirs \

@@ -68,6 +68,7 @@ void calc_palette_mono()
 
 void set_palette(float value)
 {
+    xv_prep();
     for (uint16_t i = 0; i < 256; i++)
     {
         xm_setw(WR_XADDR, XR_COLOR_ADDR | i);
@@ -83,6 +84,7 @@ void set_palette(float value)
 
 void save_palette()
 {
+    xv_prep();
     xmem_getw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 256; i++)
         old_palette[i] = xmem_getw_next_wait();
@@ -90,6 +92,7 @@ void save_palette()
 
 void restore_palette()
 {
+    xv_prep();
     xmem_setw_next_addr(XR_COLOR_ADDR);
     for (uint16_t i = 0; i < 256; i++)
         xmem_setw_next(old_palette[i]);        // set palette data
@@ -97,6 +100,7 @@ void restore_palette()
 
 void xosera_demo()
 {
+    xv_prep();
     // allocations
     cube_model = load_cube();
 

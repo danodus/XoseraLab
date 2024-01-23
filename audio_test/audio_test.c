@@ -11,16 +11,9 @@
 
 #include <xosera_m68k_api.h>
 
-#define GLITCHY 1
-
 static uint16_t g_audio_vaddr[] = {0x8000, 0x9000, 0xA000, 0xB000, 0xC000, 0xD000};
-#if GLITCHY
-static int g_nb_cycles[] = {1,2,1,2,1,2};
-static int g_audio_speed_inc = 0;
-#else
 static int g_nb_cycles[] = {1,1,1,1,1,1};
 static int g_audio_speed_inc = 10;
-#endif
 
 #define NB_VADDR (sizeof(g_audio_vaddr) / sizeof(g_audio_vaddr[0]))
 
@@ -285,7 +278,7 @@ static int8_t g_sin_data[256] = {
 
 static void init_audio_sample(int8_t * samp, int bytesize)
 {
-    
+    xv_prep();
     xm_setw(SYS_CTRL, 0x000F);        // make sure no nibbles masked
 
     xm_setw(WR_INCR, 0x0001);            // set write increment
@@ -313,6 +306,7 @@ static void init_audio_sample(int8_t * samp, int bytesize)
 
 static void play_audio_sample(unsigned int index, int bytesize, int speed)
 {
+    xv_prep();
     xreg_setw(AUD_CTRL, 0x0001);           // enable audio DMA to start playing
 
     uint16_t p  = speed;
@@ -329,6 +323,7 @@ static void play_audio_sample(unsigned int index, int bytesize, int speed)
 
 void main(void)
 {
+    xv_prep();
     xosera_init(0);
 
     init_audio_sample(g_sin_data, sizeof(g_sin_data));
@@ -345,6 +340,7 @@ void main(void)
         audio_speed += g_audio_speed_inc;
         if (audio_speed < 500 || audio_speed > 1000)
             g_audio_speed_inc = -g_audio_speed_inc;
+        cpu_delay(50);
     }
     readchar();
 }
